@@ -26,6 +26,16 @@
             android:text="@string/video_on"
             android:textSize="12sp" />
 
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switch_Flash"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_marginStart="5dp"
+            android:minHeight="48dp"
+            android:text="@string/flash"
+            android:textSize="12sp"
+            tools:ignore="TouchTargetSizeCheck" />
+
         <ImageButton
             android:id="@+id/imageButton_ClawClose"
             android:layout_width="match_parent"

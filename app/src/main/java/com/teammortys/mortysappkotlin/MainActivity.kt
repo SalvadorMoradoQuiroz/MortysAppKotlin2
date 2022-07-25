@@ -80,6 +80,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private var imageMonitor: ImageView? = null
     private var button_Video: Button? = null
     private var switch_ObjDetect: SwitchMaterial? = null
+    private var switch_Flash:SwitchMaterial?= null
     private var textView_RSSI: TextView? = null
     private var imageButton_ClawClose: ImageButton? = null
     private var imageButton_Up: ImageButton? = null
@@ -98,7 +99,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         unregisterReceiver(mBroadcastReceiver2)
         unregisterReceiver(mBroadcastReceiver3)
         unregisterReceiver(mBroadcastReceiver4)
-        //mBluetoothAdapter.cancelDiscovery();
+        //mBluetoothAdapter.cancelDiscovery()
     }
 
 
@@ -119,16 +120,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         imageButton_Right = findViewById(R.id.imageButton_Right)
         imageButton_Left = findViewById(R.id.imageButton_Left)
         imageButton_ZipperDown = findViewById(R.id.imageButton_ZipperDown)
+        switch_Flash = findViewById(R.id.switch_Flash)
 
-        imageButton_ClawClose!!.setOnClickListener(this);
-        imageButton_Up!!.setOnClickListener(this);
-        imageButton_Down!!.setOnClickListener(this);
-        imageButton_ClawOpen!!.setOnClickListener(this);
-        imageButton_ZipperUp!!.setOnClickListener(this);
-        imageButton_Right!!.setOnClickListener(this);
-        imageButton_Left!!.setOnClickListener(this);
-        imageButton_ZipperDown!!.setOnClickListener(this);
-        button_Video!!.setOnClickListener(this);
+        imageButton_ClawClose!!.setOnClickListener(this)
+        imageButton_Up!!.setOnClickListener(this)
+        imageButton_Down!!.setOnClickListener(this)
+        imageButton_ClawOpen!!.setOnClickListener(this)
+        imageButton_ZipperUp!!.setOnClickListener(this)
+        imageButton_Right!!.setOnClickListener(this)
+        imageButton_Left!!.setOnClickListener(this)
+        imageButton_ZipperDown!!.setOnClickListener(this)
+        button_Video!!.setOnClickListener(this)
+        switch_Flash!!.setOnClickListener(this)
 
         stream_thread = HandlerThread("http")
         stream_thread!!.start()
@@ -261,6 +264,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                     button_Video!!.setText("Video ON")
                 }
             }
+            R.id.switch_Flash ->{
+                if(switch_Flash!!.isChecked){
+                    flash_on_off = true
+                    flash_handler!!.sendEmptyMessage(ID_FLASH)
+                }else{
+                    flash_on_off = false
+                    flash_handler!!.sendEmptyMessage(ID_FLASH)
+                }
+            }
             else -> {}
         }
     }
@@ -282,7 +294,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
     //Métodos para solicitar peticiones a ESP 32 CAM -----------------------------------------------
     private fun setFlash() {
-        flash_on_off = flash_on_off xor true
         val flash_url: String
         if (flash_on_off) {
             flash_url = "http://192.168.43.160/onFlash"

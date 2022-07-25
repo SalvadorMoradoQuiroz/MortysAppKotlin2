@@ -24,5 +24,6 @@
     <string name="video_on">Video On</string>
     <string name="obj_detect">Obj detect</string>
     <string name="rssi">RSSI</string>
+    <string name="flash">Flash</string>
 
 </resources>
