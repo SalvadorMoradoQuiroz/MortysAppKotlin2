@@ -25,5 +25,7 @@
     <string name="obj_detect">Obj detect</string>
     <string name="rssi">RSSI</string>
     <string name="flash">Flash</string>
+    <string name="bluetooth_desactivado">Bluetooth desactivado</string>
+    <string name="dispositivo_seleccionado">Dispositivo seleccionado:</string>
 
 </resources>

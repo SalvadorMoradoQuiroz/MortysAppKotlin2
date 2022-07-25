@@ -2,6 +2,7 @@ package com.teammortys.mortysappkotlin
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.app.Dialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -35,30 +36,20 @@ import java.nio.charset.Charset
 import java.util.*
 
 
-class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener,
-    AdapterView.OnItemClickListener {
+class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener {
 
     companion object {
         private const val TAG = "MainActivity"
         private val MY_UUID_INSECURE: UUID = UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66")
     }
 
-    private var dialog: Dialog? = null
-
     //BT
-    var btnCerrar: Button? = null
-    var btnVerBT: Button? = null
-    var btnBuscar: Button? = null
     var mBluetoothAdapter: BluetoothAdapter? = null
-    var btnOnOF: Button? = null
     var mBluetoothConnection: BluetoothConnectionService? = null
-    var btnConectar: Button? = null
     var mBTDevice: BluetoothDevice? = null
     var mBTDevices: java.util.ArrayList<BluetoothDevice> = ArrayList<BluetoothDevice>()
     var mDeviceListAdapter: DeviceListAdapter? = null
     var lvNewDevices: ListView? = null
-    var dialogBT: Dialog? = null
-    var dialogListBT: Dialog? = null
 
     //---------------------------------------------------------
     private var stream_thread: HandlerThread? = null
@@ -72,7 +63,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private var ID_FLASH: Int = 201
     private var ID_RSSI: Int = 202
 
-    private var obj_detect:Boolean = false
+    private var obj_detect: Boolean = false
     private var flash_on_off: Boolean = false
     private var flagVideo = false
 
@@ -82,7 +73,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private var imageMonitor: ImageView? = null
     private var button_Video: Button? = null
     private var switch_ObjDetect: SwitchMaterial? = null
-    private var switch_Flash:SwitchMaterial?= null
+    private var switch_Flash: SwitchMaterial? = null
     private var textView_RSSI: TextView? = null
     private var imageButton_ClawClose: ImageButton? = null
     private var imageButton_Up: ImageButton? = null
@@ -94,7 +85,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private var imageButton_ZipperDown: ImageButton? = null
     //---------------------------------------------------------
 
-
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(mBroadcastReceiver1)
@@ -103,7 +93,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         unregisterReceiver(mBroadcastReceiver4)
         //mBluetoothAdapter.cancelDiscovery()
     }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -153,11 +142,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
             objectDetectorListener = this
         )
 
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
         /*textViewObjectDetected = findViewById(R.id.textViewObjectDetected)
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, IntentFilter("incomingMessage"))
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
         //editTextIP!!.setText("192.168.43.180")
 
@@ -173,85 +160,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         // Handle action bar item clicks here.
-        val id = item.getItemId()
+        when (item.getItemId()) {
+            R.id.sw_bluewifi -> {}
 
-        if (id == R.id.sw_bluewifi) {
-            //Toast.makeText(this, "Item One Clicked", Toast.LENGTH_LONG).show()
-            return true
-        }
-        if (id == R.id.conf_bt) {
-            //Toast.makeText(this, "Item Two Clicked", Toast.LENGTH_LONG).show()
-            /*val builder = AlertDialog.Builder(this,R.style.Theme_MortysAppKotlin)
-                .create()
-            val view = layoutInflater.inflate(R.layout.layout_config_alert,null)
-            val  btnConectar = view.findViewById<Button>(R.id.buttonConnect)
-            builder.setView(view)
-            btnConectar.setOnClickListener {
-                builder.dismiss()
-            }
-            builder.setCanceledOnTouchOutside(false)
-            builder.show()*/
-            this@MainActivity.dialogBT = Dialog(this@MainActivity)
-            this@MainActivity.dialogBT!!.requestWindowFeature(Window.FEATURE_NO_TITLE)
-            this@MainActivity.dialogBT!!.setCancelable(false)
-            this@MainActivity.dialogBT!!.setContentView(R.layout.layout_config_bt)
+            R.id.conf_bt -> showDialogConfBt()
 
-            this@MainActivity.btnVerBT = this@MainActivity.dialogBT!!.findViewById(R.id.btn_visible)
-            this@MainActivity.btnOnOF = this@MainActivity.dialogBT!!.findViewById(R.id.bt_onoff)
-            this@MainActivity.btnConectar =
-                this@MainActivity.dialogBT!!.findViewById(R.id.btn_conectar)
-            this@MainActivity.btnBuscar = this@MainActivity.dialogBT!!.findViewById(R.id.btn_buscar)
-            this@MainActivity.btnCerrar =
-                this@MainActivity.dialogBT!!.findViewById(R.id.btn_cgarrad)
-            this@MainActivity.btnCerrar!!.setOnClickListener(this)
+            R.id.conf_conexion -> {}
 
-            this@MainActivity.btnVerBT!!.setOnClickListener(this)
-            this@MainActivity.btnOnOF!!.setOnClickListener(this)
-            this@MainActivity.btnConectar!!.setOnClickListener(this)
-            this@MainActivity.btnBuscar!!.setOnClickListener(this)
-
-
-            this@MainActivity.dialogBT!!.show()
-            return true
+            else -> {}
         }
 
-        if (id == R.id.conf_conexion) {
-            //Toast.makeText(this, "Item Two Clicked", Toast.LENGTH_LONG).show()
-            /*val builder = AlertDialog.Builder(this,R.style.Theme_MortysAppKotlin)
-                .create()
-            val view = layoutInflater.inflate(R.layout.layout_config_alert,null)
-            val  btnConectar = view.findViewById<Button>(R.id.buttonConnect)
-            builder.setView(view)
-            btnConectar.setOnClickListener {
-                builder.dismiss()
-            }
-            builder.setCanceledOnTouchOutside(false)
-            builder.show()*/
-            this@MainActivity.dialog = Dialog(this@MainActivity)
-            this@MainActivity.dialog!!.requestWindowFeature(Window.FEATURE_NO_TITLE)
-            this@MainActivity.dialog!!.setCancelable(false)
-            this@MainActivity.dialog!!.setContentView(R.layout.layout_config_alert)
-
-            /*this@MainActivity.buttonConnect =
-                this@MainActivity.dialog!!.findViewById(R.id.buttonConnect)
-            this@MainActivity.editTextIP = this@MainActivity.dialog!!.findViewById(R.id.editTextIP)
-            this@MainActivity.buttonFlash =
-                this@MainActivity.dialog!!.findViewById(R.id.buttonDisconnect)
-            this@MainActivity.editTextIP!!.setText("192.168.43.180")
-            this@MainActivity.buttonFlash!!.setOnClickListener(this)
-            this@MainActivity.buttonDisconnect =
-                this@MainActivity.dialog!!.findViewById(R.id.buttonDisconnect)
-            this@MainActivity.btnCerrar = this@MainActivity.dialog!!.findViewById(R.id.btn_cgarraf)
-            this@MainActivity.btnCerrar!!.setOnClickListener(this)
-            this@MainActivity.buttonConnect!!.setOnClickListener(this@MainActivity)
-            this@MainActivity.buttonFlash!!.setOnClickListener(this@MainActivity)
-            this@MainActivity.buttonDisconnect!!.setOnClickListener(this@MainActivity)
-            this@MainActivity.dialog!!.show()*/
-            return true
-        }
         return super.onOptionsItemSelected(item)
     }
-
 
     @SuppressLint("MissingPermission")
     override fun onClick(v: View) {
@@ -267,16 +187,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                     button_Video!!.setText("Video ON")
                 }
             }
-            R.id.switch_Flash ->{
-                if(switch_Flash!!.isChecked){
+            R.id.switch_Flash -> {
+                if (switch_Flash!!.isChecked) {
                     flash_on_off = true
                     flash_handler!!.sendEmptyMessage(ID_FLASH)
-                }else{
+                } else {
                     flash_on_off = false
                     flash_handler!!.sendEmptyMessage(ID_FLASH)
                 }
             }
-            R.id.switch_ObjDetect->{
+            R.id.switch_ObjDetect -> {
                 obj_detect = switch_ObjDetect!!.isChecked
             }
             else -> {}
@@ -370,12 +290,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
                 val bitmap = BitmapFactory.decodeStream(`is`)
                 runOnUiThread {
-                    var mBitmapDebug = Bitmap.createScaledBitmap(bitmap, imageMonitor!!.width, imageMonitor!!.height, false)
+                    var mBitmapDebug = Bitmap.createScaledBitmap(
+                        bitmap,
+                        imageMonitor!!.width,
+                        imageMonitor!!.height,
+                        false
+                    )
                     imageMonitor!!.setImageBitmap(mBitmapDebug)
                 }
-                if(obj_detect){
+                if (obj_detect) {
                     objectDetectorHelper.detect(bitmap, 90)
-                }else{
+                } else {
                     tracking_overlay.clear()
                 }
 
@@ -390,6 +315,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     override fun onError(error: String) {
         Toast.makeText(applicationContext, error, Toast.LENGTH_LONG).show()
     }
+
     override fun onResults(
         results: MutableList<Detection>?,
         inferenceTime: Long,
@@ -411,6 +337,55 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
     //BLUETOOTH-------------------------------------------------------------------------------------
     //Método  para recibir de bt
+    fun showDialogConfBt() {
+        val builder = AlertDialog.Builder(this)
+        val view = layoutInflater.inflate(R.layout.layout_config_bt, null)
+        builder.setView(view)
+        val dialogConfBt: AlertDialog = builder.create()
+        dialogConfBt.setCancelable(false)
+        dialogConfBt.show()
+
+        var switch_BtActivate = dialogConfBt.findViewById(R.id.switch_BtActivated) as SwitchMaterial
+        var button_VisibleBt = dialogConfBt.findViewById(R.id.button_VisibleBt) as Button
+        var button_SearchDevicesBt =
+            dialogConfBt.findViewById(R.id.button_SearchDevicesBt) as Button
+        lvNewDevices = dialogConfBt.findViewById(R.id.listView_DevicesBt) as ListView
+        var textView_DeviceSelected =
+            dialogConfBt.findViewById(R.id.textView_DeviceSelected) as TextView
+        var button_ConnectBt = dialogConfBt.findViewById(R.id.button_ConnectBt) as Button
+        var button_CloseConfigBt = dialogConfBt.findViewById(R.id.button_CloseConfigBt) as Button
+
+        if(mBluetoothAdapter!!.isEnabled){
+            switch_BtActivate.setText("Bluetooth activado")
+            switch_BtActivate.isChecked = true
+        }
+
+        switch_BtActivate.setOnClickListener {
+            //checkBTPermissions()
+            enableDisableBT()
+            /*if(mBluetoothAdapter!!.isEnabled){
+                switch_BtActivate.setText("Bluetooth activado")
+            }else{
+                switch_BtActivate.setText("Bluetooth desactivado")
+            }*/
+        }
+
+        button_VisibleBt.setOnClickListener({})
+
+        button_SearchDevicesBt.setOnClickListener({buscarBT()})
+
+        lvNewDevices!!.setOnItemClickListener(
+            AdapterView.OnItemClickListener({ parent, view, position, id ->
+                textView_DeviceSelected.setText("")
+            })
+        )
+
+        button_ConnectBt.setOnClickListener({})
+
+        button_CloseConfigBt.setOnClickListener({ dialogConfBt.dismiss() })
+
+    }
+
     private val mBroadcastReceiver1: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
             val action: String? = intent.getAction()
@@ -516,16 +491,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         }
     }
 
-    //Para recibir un mensaje y mostrarlo en una caja de texo
-    var mReceiver: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            var text: String? = intent.getStringExtra("Message")
-            Log.d("Mensaje", "$text")
-            /*messages?.append("$text \n")
-            MessageIncoming?.setText(messages)*/
-        }
-    }
-
     fun enviarCaracter(caracter: String) {
         val bytes: ByteArray = caracter.toByteArray(Charset.defaultCharset())
         mBluetoothConnection?.write(bytes)
@@ -564,37 +529,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         mBluetoothConnection?.startClient(device, uuid)
     }
 
-    @SuppressLint("MissingPermission")
-    override fun onItemClick(adapterView: AdapterView<*>?, view: View?, i: Int, l: Long) {
-        dialogListBT?.dismiss()
-        mBluetoothAdapter?.cancelDiscovery()
-
-        //val deviceName: String = mBTDevices.get(i).getName()
-        val deviceAddress: String = mBTDevices[i].address
-
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            mBTDevices.get(i).createBond()
-            mBTDevice = mBTDevices[i]
-            mBluetoothConnection = BluetoothConnectionService(this@MainActivity)
-        }
-        this@MainActivity.dialogBT = Dialog(this@MainActivity)
-        this@MainActivity.dialogBT!!.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        this@MainActivity.dialogBT!!.setCancelable(false)
-        this@MainActivity.dialogBT!!.setContentView(R.layout.layout_config_bt)
-
-        this@MainActivity.btnVerBT = this@MainActivity.dialogBT!!.findViewById(R.id.btn_visible)
-        this@MainActivity.btnOnOF = this@MainActivity.dialogBT!!.findViewById(R.id.bt_onoff)
-        this@MainActivity.btnConectar = this@MainActivity.dialogBT!!.findViewById(R.id.btn_conectar)
-        this@MainActivity.btnBuscar = this@MainActivity.dialogBT!!.findViewById(R.id.btn_buscar)
-
-        this@MainActivity.btnVerBT!!.setOnClickListener(this)
-        this@MainActivity.btnOnOF!!.setOnClickListener(this)
-        this@MainActivity.btnConectar!!.setOnClickListener(this)
-        this@MainActivity.btnBuscar!!.setOnClickListener(this)
-
-
-        this@MainActivity.dialogBT!!.show()
-    }
 
     @RequiresApi(Build.VERSION_CODES.M)
     private fun checkBTPermissions() {
@@ -626,7 +560,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     @SuppressLint("MissingPermission")
     fun enableDisableBT() {
         if (mBluetoothAdapter == null) {
-            Log.d("ERROR", "No tiene bluetooth")
+            Log.e("ERROR", "No tiene bluetooth")
         }
         if (!mBluetoothAdapter!!.isEnabled) {
             val enableBTIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
