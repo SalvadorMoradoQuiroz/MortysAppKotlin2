@@ -88,8 +88,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private var imageButton_ZipperUp: ImageButton? = null
     private var imageButton_Right: ImageButton? = null
     private var imageButton_Left: ImageButton? = null
-    private var imageButton_ZipperDown: ImageButton? = null
-
+    private var imageButton_ZipperDown: ImageButton? = null}
     //---------------------------------------------------------
 
 
