@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.*
@@ -71,6 +72,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private var ID_FLASH: Int = 201
     private var ID_RSSI: Int = 202
 
+    private var obj_detect:Boolean = false
     private var flash_on_off: Boolean = false
     private var flagVideo = false
 
@@ -132,6 +134,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         imageButton_ZipperDown!!.setOnClickListener(this)
         button_Video!!.setOnClickListener(this)
         switch_Flash!!.setOnClickListener(this)
+        switch_ObjDetect!!.setOnClickListener(this)
 
         stream_thread = HandlerThread("http")
         stream_thread!!.start()
@@ -273,6 +276,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                     flash_handler!!.sendEmptyMessage(ID_FLASH)
                 }
             }
+            R.id.switch_ObjDetect->{
+                obj_detect = switch_ObjDetect!!.isChecked
+            }
             else -> {}
         }
     }
@@ -364,10 +370,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
                 val bitmap = BitmapFactory.decodeStream(`is`)
                 runOnUiThread {
-                    imageMonitor!!.setImageBitmap(bitmap)
+                    var mBitmapDebug = Bitmap.createScaledBitmap(bitmap, imageMonitor!!.width, imageMonitor!!.height, false)
+                    imageMonitor!!.setImageBitmap(mBitmapDebug)
                 }
-
-                //objectDetectorHelper.detect(bitmap, 90)
+                if(obj_detect){
+                    objectDetectorHelper.detect(bitmap, 90)
+                }else{
+                    tracking_overlay.clear()
+                }
 
             } catch (e: java.lang.Exception) {
                 e.printStackTrace()
