@@ -57,7 +57,7 @@ class ObjectDetectorHelper(
                 if (CompatibilityList().isDelegateSupportedOnThisDevice) {
                     baseOptionsBuilder.useGpu()
                 } else {
-                    objectDetectorListener?.onError("GPU is not supported on this device")
+                    objectDetectorListener?.onErrorObjDetector("GPU is not supported on this device")
                 }
             }
             DELEGATE_NNAPI -> {
@@ -80,7 +80,7 @@ class ObjectDetectorHelper(
             objectDetector =
                 ObjectDetector.createFromFileAndOptions(context, modelName, optionsBuilder.build())
         } catch (e: IllegalStateException) {
-            objectDetectorListener?.onError(
+            objectDetectorListener?.onErrorObjDetector(
                 "Object detector failed to initialize. See error logs for details"
             )
             Log.e("Test", "TFLite failed to load model with error: " + e.message)
@@ -117,7 +117,7 @@ class ObjectDetectorHelper(
     }
 
     interface DetectorListener {
-        fun onError(error: String)
+        fun onErrorObjDetector(error: String)
         fun onResults(
           results: MutableList<Detection>?,
           inferenceTime: Long,

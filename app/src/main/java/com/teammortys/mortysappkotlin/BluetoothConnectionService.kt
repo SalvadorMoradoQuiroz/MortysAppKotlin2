@@ -1,5 +1,6 @@
 package com.teammortys.mortysappkotlin
 
+import android.annotation.SuppressLint
 import android.app.ProgressDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -12,7 +13,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import java.lang.NullPointerException
 import java.nio.charset.Charset
 import java.util.*
 
@@ -26,6 +26,7 @@ class BluetoothConnectionService(var mContext: Context) {
     private var mConnectedThread: ConnectedThread? = null
 
     //Servidor Bluetooth
+    @SuppressLint("MissingPermission")
     private inner class AcceptThread : Thread() {
         // Socket servidor Lo9cal bluetooth
         private val mmServerSocket: BluetoothServerSocket?
@@ -72,6 +73,7 @@ class BluetoothConnectionService(var mContext: Context) {
     private inner class ConnectThread(device: BluetoothDevice?, uuid: UUID?) :
         Thread() {
         private var mmSocket: BluetoothSocket? = null
+        @SuppressLint("MissingPermission")
         override fun run() {
             var tmp: BluetoothSocket? = null
             try {
@@ -98,6 +100,7 @@ class BluetoothConnectionService(var mContext: Context) {
                     )
                 }
                 Log.d("ERROR", "NO SE PUEDE CONECTAR con el UUID " + MY_UUID_INSECURE)
+                e.printStackTrace()
             }
 
             connected(mmSocket, mmDevice)

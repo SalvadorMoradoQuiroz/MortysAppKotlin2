@@ -3,7 +3,6 @@ package com.teammortys.mortysappkotlin
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
-import android.app.Dialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
@@ -12,23 +11,28 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Color
 import android.os.*
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.view.Window
 import android.widget.*
 import androidx.annotation.NonNull
+import androidx.annotation.Nullable
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.material.switchmaterial.SwitchMaterial
-import com.teammortys.mortysappkotlin.ObjectDetectorHelper.*
+import com.harrysoft.androidbluetoothserial.BluetoothManager
+import com.harrysoft.androidbluetoothserial.SimpleBluetoothDeviceInterface
+import com.teammortys.mortysappkotlin.ObjectDetectorHelper.DetectorListener
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import org.tensorflow.lite.task.vision.detector.Detection
-import java.io.*
+import java.io.BufferedReader
+import java.io.InputStream
+import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
@@ -36,7 +40,10 @@ import java.nio.charset.Charset
 import java.util.*
 
 
-class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener {
+class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener,
+    SimpleBluetoothDeviceInterface.OnMessageSentListener,
+    SimpleBluetoothDeviceInterface.OnMessageReceivedListener,
+    SimpleBluetoothDeviceInterface.OnErrorListener {
 
     companion object {
         private const val TAG = "MainActivity"
@@ -47,9 +54,24 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     var mBluetoothAdapter: BluetoothAdapter? = null
     var mBluetoothConnection: BluetoothConnectionService? = null
     var mBTDevice: BluetoothDevice? = null
-    var mBTDevices: java.util.ArrayList<BluetoothDevice> = ArrayList<BluetoothDevice>()
+    var mBTDevices: ArrayList<BluetoothDevice> = ArrayList<BluetoothDevice>()
     var mDeviceListAdapter: DeviceListAdapter? = null
     var lvNewDevices: ListView? = null
+
+    //BT libBluetooth
+    var deviceMAC: String? = null
+    var deviceName: String? = null
+
+    // A CompositeDisposable that keeps track of all of our asynchronous tasks
+    private val compositeDisposable = CompositeDisposable()
+
+    // Our BluetoothManager!
+    private var bluetoothManager: BluetoothManager? = null
+
+    // Our Bluetooth Device! When disconnected it is null, so make sure we know that we need to deal with it potentially being null
+    @Nullable
+    private var deviceInterface: SimpleBluetoothDeviceInterface? = null
+    //
 
     //---------------------------------------------------------
     private var stream_thread: HandlerThread? = null
@@ -144,6 +166,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
+        // Setup our BluetoothManager
+        bluetoothManager = BluetoothManager.instance
+        //
+
         /*textViewObjectDetected = findViewById(R.id.textViewObjectDetected)
 
         //editTextIP!!.setText("192.168.43.180")
@@ -198,6 +224,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
             }
             R.id.switch_ObjDetect -> {
                 obj_detect = switch_ObjDetect!!.isChecked
+            }
+            R.id.imageButton_Up -> {
+                Log.e("btn UP:", "Click")
+                //enviarCaracter("a")
+                deviceInterface!!.sendMessage("A")
             }
             else -> {}
         }
@@ -312,7 +343,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     }
 
     //Listeners Object detect-----------------------------------------------------------------------
-    override fun onError(error: String) {
+    override fun onErrorObjDetector(error: String) {
         Toast.makeText(applicationContext, error, Toast.LENGTH_LONG).show()
     }
 
@@ -337,6 +368,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
     //BLUETOOTH-------------------------------------------------------------------------------------
     //Método  para recibir de bt
+    @SuppressLint("MissingPermission")
     fun showDialogConfBt() {
         val builder = AlertDialog.Builder(this)
         val view = layoutInflater.inflate(R.layout.layout_config_bt, null)
@@ -355,7 +387,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         var button_ConnectBt = dialogConfBt.findViewById(R.id.button_ConnectBt) as Button
         var button_CloseConfigBt = dialogConfBt.findViewById(R.id.button_CloseConfigBt) as Button
 
-        if(mBluetoothAdapter!!.isEnabled){
+        if (mBluetoothAdapter!!.isEnabled) {
             switch_BtActivate.setText("Bluetooth activado")
             switch_BtActivate.isChecked = true
         }
@@ -372,18 +404,65 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
         button_VisibleBt.setOnClickListener({})
 
-        button_SearchDevicesBt.setOnClickListener({buscarBT()})
+        button_SearchDevicesBt.setOnClickListener({ buscarBT() })
 
         lvNewDevices!!.setOnItemClickListener(
             AdapterView.OnItemClickListener({ parent, view, position, id ->
-                textView_DeviceSelected.setText("")
+                mBluetoothAdapter?.cancelDiscovery()
+
+                val deviceName: String = mBTDevices.get(position).getName()
+                val deviceAddress: String = mBTDevices.get(position).getAddress()
+                deviceMAC = deviceAddress
+                this.deviceName = deviceName
+
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                    mBTDevices.get(position).createBond()
+                    mBTDevice = mBTDevices.get(position)
+                    mBluetoothConnection = BluetoothConnectionService(this@MainActivity)
+                }
+                textView_DeviceSelected.setText(mBTDevices.get(position).toString())
             })
         )
 
-        button_ConnectBt.setOnClickListener({})
+        button_ConnectBt.setOnClickListener({
+            //startConnection()
+            compositeDisposable.add(bluetoothManager!!.openSerialDevice(deviceMAC!!)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ device -> onConnected(device.toSimpleDeviceInterface()) }) { t ->
+                })
+        })
 
         button_CloseConfigBt.setOnClickListener({ dialogConfBt.dismiss() })
 
+    }
+
+    // Called once the library connects a bluetooth device
+    private fun onConnected(deviceInterface: SimpleBluetoothDeviceInterface) {
+        this.deviceInterface = deviceInterface
+        if (deviceInterface != null) {
+            /*val putada = Objeto(applicationContext,this.deviceInterface!!)
+            this.deviceInterface = putada.regreso()
+            this.deviceInterface!!.sendMessage("Hola")*/
+            this.deviceInterface!!.setListeners(this, this, this)
+        } else {
+            //deviceInterface was null, so the connection failed
+        }
+
+    }
+
+    override fun onMessageSent(message: String) {
+        // We sent a message! Handle it here.
+        Toast.makeText(applicationContext, "Sent a message! Message was: $message", Toast.LENGTH_LONG) .show() // Replace context with your context instance.
+    }
+
+    override fun onMessageReceived(message: String) {
+        // We received a message! Handle it here.
+        Toast.makeText(applicationContext, "Received a message! Message was: $message", Toast.LENGTH_LONG).show() // Replace context with your context instance.
+    }
+
+    override fun onError(error: Throwable) {
+        // Handle the error
     }
 
     private val mBroadcastReceiver1: BroadcastReceiver = object : BroadcastReceiver() {
