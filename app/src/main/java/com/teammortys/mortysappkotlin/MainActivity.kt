@@ -15,6 +15,7 @@ import android.os.*
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.MotionEvent
 import android.view.View
 import android.widget.*
 import androidx.annotation.NonNull
@@ -36,7 +37,6 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
-import java.nio.charset.Charset
 import java.util.*
 
 
@@ -71,6 +71,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     // Our Bluetooth Device! When disconnected it is null, so make sure we know that we need to deal with it potentially being null
     @Nullable
     private var deviceInterface: SimpleBluetoothDeviceInterface? = null
+
+    private var flagBluetooth:Boolean = false
+    private var switch_BtActivate:SwitchMaterial? =null
     //
 
     //---------------------------------------------------------
@@ -81,13 +84,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private var flash_handler: Handler? = null
     private var rssi_handler: Handler? = null
 
+    //
+    private var sendDataThread: HandlerThread? = null
+    private var sendDataHandler: Handler? = null
+    //
+
     private var ID_CONNECT: Int = 200
     private var ID_FLASH: Int = 201
     private var ID_RSSI: Int = 202
+    private var ID_SEND_DATA = 203
 
     private var obj_detect: Boolean = false
     private var flash_on_off: Boolean = false
     private var flagVideo = false
+    private var sendData: Boolean = false
 
     private lateinit var objectDetectorHelper: ObjectDetectorHelper
 
@@ -106,6 +116,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private var imageButton_Left: ImageButton? = null
     private var imageButton_ZipperDown: ImageButton? = null
     //---------------------------------------------------------
+    private var letter:String = ""
 
     override fun onDestroy() {
         super.onDestroy()
@@ -113,9 +124,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         unregisterReceiver(mBroadcastReceiver2)
         unregisterReceiver(mBroadcastReceiver3)
         unregisterReceiver(mBroadcastReceiver4)
-        //mBluetoothAdapter.cancelDiscovery()
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main2)
@@ -159,6 +170,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         rssi_thread!!.start()
         rssi_handler = HttpHandler(this, rssi_thread!!.looper)
 
+        sendDataThread = HandlerThread("dataSend")
+        sendDataThread!!.start()
+        sendDataHandler = HttpHandler(this, sendDataThread!!.looper)
+
         objectDetectorHelper = ObjectDetectorHelper(
             context = applicationContext,
             objectDetectorListener = this
@@ -169,6 +184,34 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         // Setup our BluetoothManager
         bluetoothManager = BluetoothManager.instance
         //
+
+        imageButton_Up!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+            when(motionEvent.action){
+                MotionEvent.ACTION_DOWN->{
+                    letter="A"
+                    sendData = true
+                    sendDataHandler!!.sendEmptyMessage(ID_SEND_DATA)
+                }
+                MotionEvent.ACTION_UP->{
+                    sendData = false
+                }
+            }
+            return@OnTouchListener false
+        })
+
+        imageButton_Down!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+            when(motionEvent.action){
+                MotionEvent.ACTION_DOWN->{
+                    letter="B"
+                    sendData = true
+                    sendDataHandler!!.sendEmptyMessage(ID_SEND_DATA)
+                }
+                MotionEvent.ACTION_UP->{
+                    sendData = false
+                }
+            }
+            return@OnTouchListener false
+        })
 
         /*textViewObjectDetected = findViewById(R.id.textViewObjectDetected)
 
@@ -199,6 +242,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         return super.onOptionsItemSelected(item)
     }
 
+
+
     @SuppressLint("MissingPermission")
     override fun onClick(v: View) {
         when (v.id) {
@@ -225,11 +270,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
             R.id.switch_ObjDetect -> {
                 obj_detect = switch_ObjDetect!!.isChecked
             }
-            R.id.imageButton_Up -> {
+            /*R.id.imageButton_Up -> {
                 Log.e("btn UP:", "Click")
                 //enviarCaracter("a")
                 deviceInterface!!.sendMessage("A")
-            }
+            }*/
             else -> {}
         }
     }
@@ -243,10 +288,19 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                 this@MainActivity.ID_CONNECT -> this@MainActivity.videoStream()
                 this@MainActivity.ID_FLASH -> this@MainActivity.setFlash()
                 this@MainActivity.ID_RSSI -> this@MainActivity.getRSSI()
+                this@MainActivity.ID_SEND_DATA -> this@MainActivity.sendData()
                 else -> {}
             }
         }
 
+    }
+
+    private fun sendData(){
+        while (sendData){
+            deviceInterface!!.sendMessage(letter)
+            Thread.sleep(1000)
+        }
+        runOnUiThread({deviceInterface!!.sendMessage("P")})
     }
 
     //Métodos para solicitar peticiones a ESP 32 CAM -----------------------------------------------
@@ -377,7 +431,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         dialogConfBt.setCancelable(false)
         dialogConfBt.show()
 
-        var switch_BtActivate = dialogConfBt.findViewById(R.id.switch_BtActivated) as SwitchMaterial
+        this.switch_BtActivate = dialogConfBt.findViewById(R.id.switch_BtActivated) as SwitchMaterial
         var button_VisibleBt = dialogConfBt.findViewById(R.id.button_VisibleBt) as Button
         var button_SearchDevicesBt =
             dialogConfBt.findViewById(R.id.button_SearchDevicesBt) as Button
@@ -388,62 +442,46 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         var button_CloseConfigBt = dialogConfBt.findViewById(R.id.button_CloseConfigBt) as Button
 
         if (mBluetoothAdapter!!.isEnabled) {
-            switch_BtActivate.setText("Bluetooth activado")
-            switch_BtActivate.isChecked = true
+            flagBluetooth = true
+            this.switch_BtActivate!!.setText("Bluetooth activado")
+            this.switch_BtActivate!!.isChecked = true
         }
 
-        switch_BtActivate.setOnClickListener {
-            //checkBTPermissions()
+        this.switch_BtActivate!!.setOnClickListener {
             enableDisableBT()
-            /*if(mBluetoothAdapter!!.isEnabled){
-                switch_BtActivate.setText("Bluetooth activado")
-            }else{
-                switch_BtActivate.setText("Bluetooth desactivado")
-            }*/
         }
 
-        button_VisibleBt.setOnClickListener({})
+        button_VisibleBt.setOnClickListener{doVisibleBT()}
 
-        button_SearchDevicesBt.setOnClickListener({ buscarBT() })
+        button_SearchDevicesBt.setOnClickListener { searchBT() }
 
         lvNewDevices!!.setOnItemClickListener(
-            AdapterView.OnItemClickListener({ parent, view, position, id ->
+            AdapterView.OnItemClickListener { parent, view, position, id ->
                 mBluetoothAdapter?.cancelDiscovery()
-
-                val deviceName: String = mBTDevices.get(position).getName()
-                val deviceAddress: String = mBTDevices.get(position).getAddress()
-                deviceMAC = deviceAddress
-                this.deviceName = deviceName
-
-                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                    mBTDevices.get(position).createBond()
-                    mBTDevice = mBTDevices.get(position)
-                    mBluetoothConnection = BluetoothConnectionService(this@MainActivity)
-                }
-                textView_DeviceSelected.setText(mBTDevices.get(position).toString())
-            })
+                this.deviceMAC = mBTDevices.get(position).getAddress()
+                this.deviceName = mBTDevices.get(position).getName()
+                textView_DeviceSelected.setText("Dispositivo seleccionado: "+mBTDevices.get(position).toString())
+            }
         )
 
-        button_ConnectBt.setOnClickListener({
-            //startConnection()
-            compositeDisposable.add(bluetoothManager!!.openSerialDevice(deviceMAC!!)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ device -> onConnected(device.toSimpleDeviceInterface()) }) { t ->
-                })
-        })
+        button_ConnectBt.setOnClickListener{connectToDeviceBT()}
 
-        button_CloseConfigBt.setOnClickListener({ dialogConfBt.dismiss() })
+        button_CloseConfigBt.setOnClickListener{ dialogConfBt.dismiss()}
 
+    }
+
+    private fun connectToDeviceBT(){
+        compositeDisposable.add(bluetoothManager!!.openSerialDevice(deviceMAC!!)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({ device -> onConnected(device.toSimpleDeviceInterface()) }) { t ->
+            })
     }
 
     // Called once the library connects a bluetooth device
     private fun onConnected(deviceInterface: SimpleBluetoothDeviceInterface) {
         this.deviceInterface = deviceInterface
         if (deviceInterface != null) {
-            /*val putada = Objeto(applicationContext,this.deviceInterface!!)
-            this.deviceInterface = putada.regreso()
-            this.deviceInterface!!.sendMessage("Hola")*/
             this.deviceInterface!!.setListeners(this, this, this)
         } else {
             //deviceInterface was null, so the connection failed
@@ -465,27 +503,54 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         // Handle the error
     }
 
+    @SuppressLint("MissingPermission")
+    private fun doVisibleBT(){
+        val discoverableIntent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
+        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
+        startActivity(discoverableIntent)
+        val intentFilter = IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED)
+        registerReceiver(mBroadcastReceiver2, intentFilter)
+    }
+
     private val mBroadcastReceiver1: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
             val action: String? = intent.getAction()
-            // When discovery finds a device
-            if (action == BluetoothAdapter.ACTION_SCAN_MODE_CHANGED) {
-                val state: Int =
-                    intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
+            if (action == BluetoothAdapter.ACTION_STATE_CHANGED) {
+                val state: Int = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
                 when (state) {
-                    BluetoothAdapter.STATE_OFF -> Log.d(TAG, "onReceive: STATE OFF")
-                    BluetoothAdapter.STATE_TURNING_OFF -> Log.d(
-                        TAG,
-                        "mBroadcastReceiver1: STATE TURNING OFF"
-                    )
-                    BluetoothAdapter.STATE_ON -> Log.d(TAG, "mBroadcastReceiver1: STATE ON")
-                    BluetoothAdapter.STATE_TURNING_ON -> Log.d(
-                        TAG,
-                        "mBroadcastReceiver1: STATE TURNING ON"
-                    )
+                    BluetoothAdapter.STATE_OFF -> {
+                        flagBluetooth = false
+                        this@MainActivity.switch_BtActivate!!.setText("Bluetooth desactivado")
+                        this@MainActivity.switch_BtActivate!!.isChecked = false
+                        Toast.makeText(applicationContext, "Bluetooth apagado", Toast.LENGTH_SHORT).show()
+                    }
+                    BluetoothAdapter.STATE_TURNING_OFF -> {
+                        Toast.makeText(applicationContext, "Apagando bluetooth", Toast.LENGTH_SHORT).show()
+                    }
+                    BluetoothAdapter.STATE_ON -> {
+                        this@MainActivity.switch_BtActivate!!.setText("Bluetooth activado")
+                        this@MainActivity.switch_BtActivate!!.isChecked = true
+                        flagBluetooth = true
+                        Toast.makeText(applicationContext, "Bluetooth encendido", Toast.LENGTH_SHORT).show()
+                    }
+                    BluetoothAdapter.STATE_TURNING_ON -> {
+                        Toast.makeText(applicationContext, "Encendiendo bluetooth", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if(requestCode==500){//Intent para encender bluetooth o no
+            if(resultCode==0){//Se rechazo
+                this@MainActivity.switch_BtActivate!!.setText("Bluetooth desactivado")
+                this@MainActivity.switch_BtActivate!!.isChecked = false
+            }
+        }
+        Log.e("requestCode", requestCode.toString() )
+        Log.e("resultCode", resultCode.toString() )
     }
 
     //Para ver los cambios de estado del bluetooth, si se enciende o expira discovery
@@ -493,29 +558,23 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         override fun onReceive(context: Context?, intent: Intent) {
             val action: String? = intent.getAction()
             if (action == BluetoothAdapter.ACTION_SCAN_MODE_CHANGED) {
-                val mode: Int =
-                    intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.ERROR)
+                val mode: Int = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.ERROR)
                 when (mode) {
-                    BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE -> Log.d(
-                        TAG,
-                        "mBroadcastReceiver2: Discoverability Enabled."
-                    )
-                    BluetoothAdapter.SCAN_MODE_CONNECTABLE -> Log.d(
-                        TAG,
-                        "mBroadcastReceiver2: Discoverability Disabled. Able to receive connections."
-                    )
-                    BluetoothAdapter.SCAN_MODE_NONE -> Log.d(
-                        TAG,
-                        "mBroadcastReceiver2: Discoverability Disabled. Not able to receive connections."
-                    )
-                    BluetoothAdapter.STATE_CONNECTING -> Log.d(
-                        TAG,
-                        "mBroadcastReceiver2: Connecting...."
-                    )
-                    BluetoothAdapter.STATE_CONNECTED -> Log.d(
-                        TAG,
-                        "mBroadcastReceiver2: Connected."
-                    )
+                    BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE -> {
+                        Toast.makeText(applicationContext, "Visibilidad habilitada.", Toast.LENGTH_SHORT).show()
+                    }
+                    BluetoothAdapter.SCAN_MODE_CONNECTABLE ->{
+                        Toast.makeText(applicationContext, "Visibilidad deshabilitada. Capaz de recibir conexiones.", Toast.LENGTH_SHORT).show()
+                    }
+                    BluetoothAdapter.SCAN_MODE_NONE ->{
+                        Toast.makeText(applicationContext, "Visibilidad deshabilitada. No capaz de recibir conexiones.", Toast.LENGTH_SHORT).show()
+                    }
+                    BluetoothAdapter.STATE_CONNECTING -> {
+                        Toast.makeText(applicationContext, "Conectando...", Toast.LENGTH_SHORT).show()
+                    }
+                    BluetoothAdapter.STATE_CONNECTED ->{
+                        Toast.makeText(applicationContext, "Conectado.", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
@@ -570,16 +629,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         }
     }
 
-    fun enviarCaracter(caracter: String) {
-        val bytes: ByteArray = caracter.toByteArray(Charset.defaultCharset())
-        mBluetoothConnection?.write(bytes)
-    }
 
     @SuppressLint("MissingPermission")
-    fun buscarBT() {
+    fun searchBT() {
 
         mBTDevices = ArrayList<BluetoothDevice>()
-
         checkBTPermissions()
 
         if (mBluetoothAdapter!!.isDiscovering()) {
@@ -589,23 +643,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
             val discoverDevicesIntent = IntentFilter(BluetoothDevice.ACTION_FOUND)
             registerReceiver(mBroadcastReceiver3, discoverDevicesIntent)
         }
-        if (!mBluetoothAdapter?.isDiscovering()!!) {
+        else if (!mBluetoothAdapter?.isDiscovering()!!) {
             checkBTPermissions()
             mBluetoothAdapter?.startDiscovery()
             val discoverDevicesIntent = IntentFilter(BluetoothDevice.ACTION_FOUND)
             registerReceiver(mBroadcastReceiver3, discoverDevicesIntent)
         }
 
-    }
-
-    //Método para iniciar conexión.
-    fun startConnection() {
-        startBTConnection(mBTDevice, MY_UUID_INSECURE)
-    }
-
-    fun startBTConnection(device: BluetoothDevice?, uuid: UUID?) {
-        Log.d("ERROR", "Iniciando conexión ")
-        mBluetoothConnection?.startClient(device, uuid)
     }
 
 
@@ -639,11 +683,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     @SuppressLint("MissingPermission")
     fun enableDisableBT() {
         if (mBluetoothAdapter == null) {
-            Log.e("ERROR", "No tiene bluetooth")
+            Toast.makeText(applicationContext, "El dispositivo no tiene bluetooth", Toast.LENGTH_SHORT).show()
+            Log.e("ERROR:", "El dispositivo no tiene bluetooth")
         }
         if (!mBluetoothAdapter!!.isEnabled) {
             val enableBTIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            startActivity(enableBTIntent)
+            startActivityForResult(enableBTIntent, 500)
             val BTIntent = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
             registerReceiver(mBroadcastReceiver1, BTIntent)
         }
