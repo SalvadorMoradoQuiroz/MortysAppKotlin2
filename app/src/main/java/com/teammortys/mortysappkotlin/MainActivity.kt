@@ -11,7 +11,9 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.location.LocationManager
 import android.os.*
+import android.provider.Settings
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -54,7 +56,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     var mBluetoothAdapter: BluetoothAdapter? = null
     var mBluetoothConnection: BluetoothConnectionService? = null
     var mBTDevice: BluetoothDevice? = null
-    var mBTDevices: ArrayList<BluetoothDevice> = ArrayList<BluetoothDevice>()
+    var mBTDevices: ArrayList<BluetoothDevice>? = null
     var mDeviceListAdapter: DeviceListAdapter? = null
     var lvNewDevices: ListView? = null
 
@@ -292,7 +294,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                 else -> {}
             }
         }
-
     }
 
     private fun sendData(){
@@ -441,6 +442,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         var button_ConnectBt = dialogConfBt.findViewById(R.id.button_ConnectBt) as Button
         var button_CloseConfigBt = dialogConfBt.findViewById(R.id.button_CloseConfigBt) as Button
 
+        mBTDevices = ArrayList<BluetoothDevice>()
+        mDeviceListAdapter = DeviceListAdapter(applicationContext, R.layout.device_adapter_view, mBTDevices!!)
+        lvNewDevices?.adapter = mDeviceListAdapter
+
         if (mBluetoothAdapter!!.isEnabled) {
             flagBluetooth = true
             this.switch_BtActivate!!.setText("Bluetooth activado")
@@ -458,9 +463,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         lvNewDevices!!.setOnItemClickListener(
             AdapterView.OnItemClickListener { parent, view, position, id ->
                 mBluetoothAdapter?.cancelDiscovery()
-                this.deviceMAC = mBTDevices.get(position).getAddress()
-                this.deviceName = mBTDevices.get(position).getName()
-                textView_DeviceSelected.setText("Dispositivo seleccionado: "+mBTDevices.get(position).toString())
+                this.deviceMAC = mBTDevices!!.get(position).getAddress()
+                this.deviceName = mBTDevices!!.get(position).getName()
+                textView_DeviceSelected.setText("Dispositivo seleccionado: "+mBTDevices!!.get(position).toString())
             }
         )
 
@@ -471,32 +476,33 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     }
 
     private fun connectToDeviceBT(){
-        compositeDisposable.add(bluetoothManager!!.openSerialDevice(deviceMAC!!)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({ device -> onConnected(device.toSimpleDeviceInterface()) }) { t ->
-            })
+        if(deviceMAC != null){
+            compositeDisposable.add(bluetoothManager!!.openSerialDevice(deviceMAC!!)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ device -> onConnected(device.toSimpleDeviceInterface()) }) { t ->
+                })
+        }else{
+            Toast.makeText(applicationContext, "Debes buscar y seleccionar un dispositivo primero.", Toast.LENGTH_SHORT).show()
+        }
     }
 
     // Called once the library connects a bluetooth device
     private fun onConnected(deviceInterface: SimpleBluetoothDeviceInterface) {
         this.deviceInterface = deviceInterface
-        if (deviceInterface != null) {
+        if (this.deviceInterface != null) {
             this.deviceInterface!!.setListeners(this, this, this)
         } else {
-            //deviceInterface was null, so the connection failed
+            Toast.makeText(applicationContext, "Fallo al conectar, intente de nuevo.", Toast.LENGTH_SHORT).show()
         }
-
     }
 
     override fun onMessageSent(message: String) {
-        // We sent a message! Handle it here.
-        Toast.makeText(applicationContext, "Sent a message! Message was: $message", Toast.LENGTH_LONG) .show() // Replace context with your context instance.
+        Toast.makeText(applicationContext, "Mensaje enviado: $message", Toast.LENGTH_LONG) .show()
     }
 
     override fun onMessageReceived(message: String) {
-        // We received a message! Handle it here.
-        Toast.makeText(applicationContext, "Received a message! Message was: $message", Toast.LENGTH_LONG).show() // Replace context with your context instance.
+        Toast.makeText(applicationContext, "Mensaje recibido: $message", Toast.LENGTH_LONG).show()
     }
 
     override fun onError(error: Throwable) {
@@ -586,19 +592,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         override fun onReceive(context: Context?, intent: Intent) {
             val action: String? = intent.getAction()
             Log.d(TAG, "onReceive: ACTION FOUND.")
+            Log.d("action", action!!)
             if (action == BluetoothDevice.ACTION_FOUND) {
                 val device: BluetoothDevice? =
                     intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-                mBTDevices.add(device!!)
-                Log.d(TAG, "onReceive: " + device?.getName().toString() + ": " + device.address)
-                mDeviceListAdapter =
-                    DeviceListAdapter(context!!, R.layout.device_adapter_view, mBTDevices)
-                lvNewDevices?.adapter = mDeviceListAdapter
+                if(!mBTDevices!!.contains(device!!)) {
+                    Log.d(TAG, "onReceive: " + device?.getName().toString() + ": " + device.address)
+                    mBTDevices!!.add(device!!)
+                    mDeviceListAdapter!!.notifyDataSetChanged()
+                }
             }
-            mDeviceListAdapter!!.notifyDataSetChanged();
-            lvNewDevices!!.invalidateViews();
-            lvNewDevices!!.refreshDrawableState();
-
         }
     }
 
@@ -630,53 +633,68 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     }
 
 
-    @SuppressLint("MissingPermission")
+    @SuppressLint("MissingPermission", "NewApi")
     fun searchBT() {
-
-        mBTDevices = ArrayList<BluetoothDevice>()
         checkBTPermissions()
 
-        if (mBluetoothAdapter!!.isDiscovering()) {
-            mBluetoothAdapter!!.cancelDiscovery()
-            checkBTPermissions()
-            mBluetoothAdapter?.startDiscovery()
-            val discoverDevicesIntent = IntentFilter(BluetoothDevice.ACTION_FOUND)
-            registerReceiver(mBroadcastReceiver3, discoverDevicesIntent)
-        }
-        else if (!mBluetoothAdapter?.isDiscovering()!!) {
-            checkBTPermissions()
-            mBluetoothAdapter?.startDiscovery()
-            val discoverDevicesIntent = IntentFilter(BluetoothDevice.ACTION_FOUND)
-            registerReceiver(mBroadcastReceiver3, discoverDevicesIntent)
-        }
+        var location:LocationManager = applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        var flagBT:Boolean = mBluetoothAdapter!!.isEnabled
+        var flagGPS:Boolean = location.isLocationEnabled
 
+        if(flagBT && flagGPS){
+
+            mBTDevices!!.clear()
+            mDeviceListAdapter!!.notifyDataSetChanged()
+
+            if (mBluetoothAdapter!!.isDiscovering()) {
+                mBluetoothAdapter!!.cancelDiscovery()
+                checkBTPermissions()
+                mBluetoothAdapter?.startDiscovery()
+                val discoverDevicesIntent = IntentFilter(BluetoothDevice.ACTION_FOUND)
+                registerReceiver(mBroadcastReceiver3, discoverDevicesIntent)
+            }
+            else if (!mBluetoothAdapter?.isDiscovering()!!) {
+                checkBTPermissions()
+                mBluetoothAdapter?.startDiscovery()
+                val discoverDevicesIntent = IntentFilter(BluetoothDevice.ACTION_FOUND)
+                registerReceiver(mBroadcastReceiver3, discoverDevicesIntent)
+            }
+        }else{
+            if(!flagGPS){
+                Toast.makeText(applicationContext, "Debes encender la ubicación", Toast.LENGTH_LONG).show()
+                locationOn(location)
+            }
+            if(flagGPS && (!flagBT)){
+                Toast.makeText(applicationContext, "Debes encender el bluetooth", Toast.LENGTH_SHORT).show()
+                enableDisableBT()
+            }
+        }
+    }
+
+    private fun locationOn(location:LocationManager){
+        var intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+        startActivityForResult(intent, 501)
     }
 
 
     @RequiresApi(Build.VERSION_CODES.M)
     private fun checkBTPermissions() {
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP) {
-            var permissionCheck: Int =
-                this.checkSelfPermission("Manifest.permission.ACCESS_FINE_LOCATION")
-            permissionCheck += this.checkSelfPermission("Manifest.permission.ACCESS_COARSE_LOCATION")
-            var permiso2: Int = ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.BLUETOOTH_SCAN
-            );
-            if (permissionCheck != 0 && permiso2 != 0) {
-                this.requestPermissions(
-                    arrayOf<String>(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                        Manifest.permission.BLUETOOTH_SCAN,
-                        Manifest.permission.BLUETOOTH,
-                        Manifest.permission.BLUETOOTH_ADMIN,
-                        Manifest.permission.BLUETOOTH_CONNECT
-                    ), 1001
-                ) //Any number
-            }
-        } else {
-            Log.d("ERROR", "Permisos denegador")
+        var permissionCheck: Int = this.checkSelfPermission("Manifest.permission.ACCESS_FINE_LOCATION")
+        permissionCheck += this.checkSelfPermission("Manifest.permission.ACCESS_COARSE_LOCATION")
+
+        var permiso2: Int = ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN)
+
+        if (permissionCheck != 0 && permiso2 != 0) {
+            this.requestPermissions(
+                arrayOf<String>(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.BLUETOOTH_SCAN,
+                    Manifest.permission.BLUETOOTH,
+                    Manifest.permission.BLUETOOTH_ADMIN,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ), 1001
+            ) //Any number
         }
     }
 
