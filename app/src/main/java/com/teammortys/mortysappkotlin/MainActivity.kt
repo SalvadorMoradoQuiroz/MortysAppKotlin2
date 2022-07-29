@@ -63,33 +63,24 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     //BT libBluetooth
     var deviceMAC: String? = null
     var deviceName: String? = null
-
     // A CompositeDisposable that keeps track of all of our asynchronous tasks
     private val compositeDisposable = CompositeDisposable()
-
     // Our BluetoothManager!
     private var bluetoothManager: BluetoothManager? = null
-
     // Our Bluetooth Device! When disconnected it is null, so make sure we know that we need to deal with it potentially being null
     @Nullable
     private var deviceInterface: SimpleBluetoothDeviceInterface? = null
-
     private var flagBluetooth:Boolean = false
     private var switch_BtActivate:SwitchMaterial? =null
-    //
 
-    //---------------------------------------------------------
     private var stream_thread: HandlerThread? = null
     private var flash_thread: HandlerThread? = null
     private var rssi_thread: HandlerThread? = null
     private var stream_handler: Handler? = null
     private var flash_handler: Handler? = null
     private var rssi_handler: Handler? = null
-
-    //
     private var sendDataThread: HandlerThread? = null
     private var sendDataHandler: Handler? = null
-    //
 
     private var ID_CONNECT: Int = 200
     private var ID_FLASH: Int = 201
@@ -102,8 +93,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private var sendData: Boolean = false
 
     private lateinit var objectDetectorHelper: ObjectDetectorHelper
-
     private lateinit var tracking_overlay: OverlayView
+
     private var imageMonitor: ImageView? = null
     private var button_Video: Button? = null
     private var switch_ObjDetect: SwitchMaterial? = null
@@ -117,17 +108,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private var imageButton_Right: ImageButton? = null
     private var imageButton_Left: ImageButton? = null
     private var imageButton_ZipperDown: ImageButton? = null
-    //---------------------------------------------------------
-    private var letter:String = ""
-
     private var textView_DeviceSelected:TextView? = null
+    private var letter:String = ""
 
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(mBroadcastReceiver1)
         unregisterReceiver(mBroadcastReceiver2)
         unregisterReceiver(mBroadcastReceiver3)
-        unregisterReceiver(mBroadcastReceiver4)
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -187,7 +175,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
         // Setup our BluetoothManager
         bluetoothManager = BluetoothManager.instance
-        //
 
         imageButton_Up!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
             when(motionEvent.action){
@@ -217,10 +204,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
             return@OnTouchListener false
         })
 
-        /*textViewObjectDetected = findViewById(R.id.textViewObjectDetected)
-
-        //editTextIP!!.setText("192.168.43.180")
-
+        /*editTextIP!!.setText("192.168.43.180")
         checkBTPermissions()*/
     }
 
@@ -242,11 +226,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
             else -> {}
         }
-
         return super.onOptionsItemSelected(item)
     }
-
-
 
     @SuppressLint("MissingPermission")
     override fun onClick(v: View) {
@@ -274,11 +255,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
             R.id.switch_ObjDetect -> {
                 obj_detect = switch_ObjDetect!!.isChecked
             }
-            /*R.id.imageButton_Up -> {
-                Log.e("btn UP:", "Click")
-                //enviarCaracter("a")
-                deviceInterface!!.sendMessage("A")
-            }*/
             else -> {}
         }
     }
@@ -387,7 +363,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                     imageMonitor!!.setImageBitmap(mBitmapDebug)
                 }
                 if (obj_detect) {
-                    objectDetectorHelper.detect(bitmap, 90)
+                    objectDetectorHelper.detect(bitmap, 180)
                 } else {
                     tracking_overlay.clear()
                 }
@@ -452,6 +428,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
             flagBluetooth = true
             this.switch_BtActivate!!.setText("Bluetooth activado")
             this.switch_BtActivate!!.isChecked = true
+        }
+
+        if(this.deviceInterface!=null){
+            deviceMAC=this.deviceInterface!!.device.mac
+            textView_DeviceSelected!!.setText("Dispositivo seleccionado: " + deviceMAC )
         }
 
         this.switch_BtActivate!!.setOnClickListener {
@@ -627,34 +608,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
             }
         }
     }
-
-    //Broadcast Receiver that detects bond state changes (Pairing status changes)
-    private val mBroadcastReceiver4: BroadcastReceiver = object : BroadcastReceiver() {
-        @SuppressLint("MissingPermission")
-        override fun onReceive(context: Context?, intent: Intent) {
-            val action: String? = intent.getAction()
-            if (action == BluetoothDevice.ACTION_BOND_STATE_CHANGED) {
-                val mDevice: BluetoothDevice? =
-                    intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-                //3 cases:
-                //case1: bonded already
-                if (mDevice?.getBondState() === BluetoothDevice.BOND_BONDED) {
-                    Log.d(TAG, "BroadcastReceiver: BOND_BONDED.")
-                    //inside BroadcastReceiver4
-                    mBTDevice = mDevice
-                }
-                //case2: creating a bone
-                if (mDevice?.getBondState() === BluetoothDevice.BOND_BONDING) {
-                    Log.d(TAG, "BroadcastReceiver: BOND_BONDING.")
-                }
-                //case3: breaking a bond
-                if (mDevice?.getBondState() === BluetoothDevice.BOND_NONE) {
-                    Log.d(TAG, "BroadcastReceiver: BOND_NONE.")
-                }
-            }
-        }
-    }
-
 
     @SuppressLint("MissingPermission", "NewApi")
     fun searchBT() {
