@@ -250,7 +250,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                     sendData = false
                 }
             }
-        }else{
+       }else{
             Toast.makeText(applicationContext, "Debes conectarte al dispositibo bluetooth.", Toast.LENGTH_SHORT).show()
         }
     }
@@ -295,6 +295,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                 this@MainActivity.ID_FLASH -> this@MainActivity.setFlash()
                 this@MainActivity.ID_RSSI -> this@MainActivity.getRSSI()
                 this@MainActivity.ID_SEND_DATA -> this@MainActivity.sendData()
+                //this@MainActivity.ID_SEND_DATA -> this@MainActivity.sendLetterESP32()
                 else -> {}
             }
         }
@@ -331,6 +332,29 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                 val isr = InputStreamReader(`in`)
                 val br = BufferedReader(isr)
                 Log.e("Res", br.readLine())
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun sendLetterESP32() {
+        val flash_url: String = "http://192.168.43.160/receiveLetter?letter={$letter}"
+        try {
+            while(sendData){
+                val url = URL(flash_url)
+                val huc = url.openConnection() as HttpURLConnection
+                huc.requestMethod = "GET"
+                huc.connectTimeout = 1000 * 5
+                huc.readTimeout = 1000 * 5
+                huc.doInput = true
+                huc.connect()
+                if (huc.responseCode == 200) {
+                    val `in` = huc.inputStream
+                    val isr = InputStreamReader(`in`)
+                    val br = BufferedReader(isr)
+                    Log.e("Res", br.readLine())
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
