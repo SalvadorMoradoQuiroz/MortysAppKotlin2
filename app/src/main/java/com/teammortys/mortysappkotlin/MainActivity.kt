@@ -172,38 +172,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         )
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-
         // Setup our BluetoothManager
         bluetoothManager = BluetoothManager.instance
 
-        imageButton_Up!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
-            when(motionEvent.action){
-                MotionEvent.ACTION_DOWN->{
-                    letter="A"
-                    sendData = true
-                    sendDataHandler!!.sendEmptyMessage(ID_SEND_DATA)
-                }
-                MotionEvent.ACTION_UP->{
-                    sendData = false
-                }
-            }
-            return@OnTouchListener false
-        })
-
-        imageButton_Down!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
-            when(motionEvent.action){
-                MotionEvent.ACTION_DOWN->{
-                    letter="B"
-                    sendData = true
-                    sendDataHandler!!.sendEmptyMessage(ID_SEND_DATA)
-                }
-                MotionEvent.ACTION_UP->{
-                    sendData = false
-                }
-            }
-            return@OnTouchListener false
-        })
-
+        onTouchButtons()
         /*editTextIP!!.setText("192.168.43.180")
         checkBTPermissions()*/
     }
@@ -227,6 +199,60 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
             else -> {}
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    //Acciones de los botones
+    @SuppressLint("ClickableViewAccessibility")
+    private fun onTouchButtons(){
+        imageButton_Up!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+            dataSendOnTouch("A", motionEvent)
+            return@OnTouchListener false
+        })
+        imageButton_Down!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+            dataSendOnTouch("B", motionEvent)
+            return@OnTouchListener false
+        })
+        imageButton_ClawOpen!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+            dataSendOnTouch("C", motionEvent)
+            return@OnTouchListener false
+        })
+        imageButton_ClawClose!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+            dataSendOnTouch("D", motionEvent)
+            return@OnTouchListener false
+        })
+        imageButton_ZipperUp!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+            dataSendOnTouch("E", motionEvent)
+            return@OnTouchListener false
+        })
+        imageButton_ZipperDown!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+            dataSendOnTouch("F", motionEvent)
+            return@OnTouchListener false
+        })
+        imageButton_Left!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+            dataSendOnTouch("G", motionEvent)
+            return@OnTouchListener false
+        })
+        imageButton_Right!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+            dataSendOnTouch("H", motionEvent)
+            return@OnTouchListener false
+        })
+    }
+
+    private fun dataSendOnTouch(letter:String, motionEvent:MotionEvent){
+        if(this.deviceInterface!=null){
+            when(motionEvent.action){
+                MotionEvent.ACTION_DOWN->{
+                    this.letter=letter
+                    sendData = true
+                    sendDataHandler!!.sendEmptyMessage(ID_SEND_DATA)
+                }
+                MotionEvent.ACTION_UP->{
+                    sendData = false
+                }
+            }
+        }else{
+            Toast.makeText(applicationContext, "Debes conectarte al dispositibo bluetooth.", Toast.LENGTH_SHORT).show()
+        }
     }
 
     @SuppressLint("MissingPermission")
