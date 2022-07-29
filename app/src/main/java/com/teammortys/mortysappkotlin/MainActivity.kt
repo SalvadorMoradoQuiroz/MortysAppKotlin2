@@ -120,6 +120,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     //---------------------------------------------------------
     private var letter:String = ""
 
+    private var textView_DeviceSelected:TextView? = null
+
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(mBroadcastReceiver1)
@@ -437,7 +439,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         var button_SearchDevicesBt =
             dialogConfBt.findViewById(R.id.button_SearchDevicesBt) as Button
         lvNewDevices = dialogConfBt.findViewById(R.id.listView_DevicesBt) as ListView
-        var textView_DeviceSelected =
+        textView_DeviceSelected =
             dialogConfBt.findViewById(R.id.textView_DeviceSelected) as TextView
         var button_ConnectBt = dialogConfBt.findViewById(R.id.button_ConnectBt) as Button
         var button_CloseConfigBt = dialogConfBt.findViewById(R.id.button_CloseConfigBt) as Button
@@ -465,7 +467,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                 mBluetoothAdapter?.cancelDiscovery()
                 this.deviceMAC = mBTDevices!!.get(position).getAddress()
                 this.deviceName = mBTDevices!!.get(position).getName()
-                textView_DeviceSelected.setText("Dispositivo seleccionado: "+mBTDevices!!.get(position).toString())
+                textView_DeviceSelected!!.setText("Dispositivo seleccionado: "+mBTDevices!!.get(position).toString())
             }
         )
 
@@ -480,8 +482,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
             compositeDisposable.add(bluetoothManager!!.openSerialDevice(deviceMAC!!)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ device -> onConnected(device.toSimpleDeviceInterface()) }) { t ->
-                })
+                .subscribe({ device -> onConnected(device.toSimpleDeviceInterface()) }, ({t->onErrorConnected(t)}))
+            )
         }else{
             Toast.makeText(applicationContext, "Debes buscar y seleccionar un dispositivo primero.", Toast.LENGTH_SHORT).show()
         }
@@ -492,21 +494,35 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         this.deviceInterface = deviceInterface
         if (this.deviceInterface != null) {
             this.deviceInterface!!.setListeners(this, this, this)
+            Toast.makeText(applicationContext, "Se conectó al dispositivo: "+this.deviceInterface!!.device.mac, Toast.LENGTH_SHORT).show()
         } else {
             Toast.makeText(applicationContext, "Fallo al conectar, intente de nuevo.", Toast.LENGTH_SHORT).show()
         }
     }
 
+    //Error al conectar dispositivo
+    private fun onErrorConnected(error: Throwable){
+        Toast.makeText(applicationContext, "Error al conectar el dispositivo.", Toast.LENGTH_SHORT).show()
+        Log.e("Error onConnected", error.message.toString())
+    }
+
     override fun onMessageSent(message: String) {
-        Toast.makeText(applicationContext, "Mensaje enviado: $message", Toast.LENGTH_LONG) .show()
+        Toast.makeText(applicationContext, "Mensaje enviado: $message", Toast.LENGTH_SHORT) .show()
     }
 
     override fun onMessageReceived(message: String) {
-        Toast.makeText(applicationContext, "Mensaje recibido: $message", Toast.LENGTH_LONG).show()
+        Toast.makeText(applicationContext, "Mensaje recibido: $message", Toast.LENGTH_SHORT).show()
     }
 
+    //Error deviceInterface
     override fun onError(error: Throwable) {
-        // Handle the error
+        Log.e("Error onError deviceInterface", error.message.toString())
+        bluetoothManager!!.close()
+        deviceMAC = null
+        Toast.makeText(applicationContext, "Se desconecto del dispositivo vinculado.", Toast.LENGTH_SHORT).show()
+        if(textView_DeviceSelected!=null){
+            textView_DeviceSelected!!.setText("Dispositivo seleccionado: ")
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -529,6 +545,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                         this@MainActivity.switch_BtActivate!!.setText("Bluetooth desactivado")
                         this@MainActivity.switch_BtActivate!!.isChecked = false
                         Toast.makeText(applicationContext, "Bluetooth apagado", Toast.LENGTH_SHORT).show()
+                        if(mBTDevices!=null){
+                            mBTDevices!!.clear()
+                            mDeviceListAdapter!!.notifyDataSetChanged()
+                            textView_DeviceSelected!!.setText("Dispositivo seleccionado: ")
+                            deviceMAC = null
+                        }
+                        mBTDevices!!.clear();
                     }
                     BluetoothAdapter.STATE_TURNING_OFF -> {
                         Toast.makeText(applicationContext, "Apagando bluetooth", Toast.LENGTH_SHORT).show()
