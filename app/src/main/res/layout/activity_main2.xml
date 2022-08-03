@@ -17,7 +17,7 @@
         android:background="@color/white"
         android:orientation="vertical">
 
-        <Button
+        5<Button
             android:id="@+id/button_Video"
             android:layout_width="match_parent"
             android:layout_height="60dp"
@@ -113,6 +113,24 @@
             android:contentDescription="@string/btn_vaciar_down"
             android:scaleType="fitCenter"
             app:srcCompat="@drawable/vaciar" />
+
+        <ImageButton
+            android:id="@+id/imageButton_SacarBase"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:contentDescription="btn sacar base"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/sacar_base"/>
+
+        <ImageButton
+            android:id="@+id/imageButton_MeterBase"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:contentDescription="btn meter base"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/meter_base"/>
     </LinearLayout>
 
     <FrameLayout

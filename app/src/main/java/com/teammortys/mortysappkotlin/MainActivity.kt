@@ -114,6 +114,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private var imageButton_EmptyUp:ImageButton? = null
     private var imageButton_EmptyDown:ImageButton? = null
 
+    private var imageButton_SacarBase:ImageButton? = null
+    private var imageButton_MeterBase:ImageButton? = null
+
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(mBroadcastReceiver1)
@@ -143,8 +146,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         imageButton_Stop = findViewById(R.id.imageButton_Stop)
         imageButton_EmptyUp = findViewById(R.id.imageButton_EmptyUp)
         imageButton_EmptyDown = findViewById(R.id.imageButton_EmptyDown)
+        imageButton_SacarBase = findViewById(R.id.imageButton_SacarBase)
+        imageButton_MeterBase = findViewById(R.id.imageButton_MeterBase)
 
 
+        imageButton_MeterBase!!.setOnClickListener(this)
+        imageButton_SacarBase!!.setOnClickListener(this)
         imageButton_Stop!!.setOnClickListener(this)
         imageButton_EmptyUp!!.setOnClickListener(this)
         imageButton_EmptyDown!!.setOnClickListener(this)
@@ -159,6 +166,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         button_Video!!.setOnClickListener(this)
         switch_Flash!!.setOnClickListener(this)
         switch_ObjDetect!!.setOnClickListener(this)
+
 
         stream_thread = HandlerThread("http")
         stream_thread!!.start()
@@ -256,6 +264,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         })
         imageButton_EmptyDown!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
             dataSendOnTouch("K", motionEvent)
+            return@OnTouchListener false
+        })
+        imageButton_SacarBase!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+            dataSendOnTouch("L", motionEvent)
+            return@OnTouchListener false
+        })
+        imageButton_MeterBase!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+            dataSendOnTouch("M", motionEvent)
             return@OnTouchListener false
         })
     }
