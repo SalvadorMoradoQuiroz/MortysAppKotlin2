@@ -110,6 +110,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private var imageButton_ZipperDown: ImageButton? = null
     private var textView_DeviceSelected:TextView? = null
     private var letter:String = ""
+    private var imageButton_Stop:ImageButton? = null
+    private var imageButton_EmptyUp:ImageButton? = null
+    private var imageButton_EmptyDown:ImageButton? = null
 
     override fun onDestroy() {
         super.onDestroy()
@@ -137,7 +140,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         imageButton_Left = findViewById(R.id.imageButton_Left)
         imageButton_ZipperDown = findViewById(R.id.imageButton_ZipperDown)
         switch_Flash = findViewById(R.id.switch_Flash)
+        imageButton_Stop = findViewById(R.id.imageButton_Stop)
+        imageButton_EmptyUp = findViewById(R.id.imageButton_EmptyUp)
+        imageButton_EmptyDown = findViewById(R.id.imageButton_EmptyDown)
 
+
+        imageButton_Stop!!.setOnClickListener(this)
+        imageButton_EmptyUp!!.setOnClickListener(this)
+        imageButton_EmptyDown!!.setOnClickListener(this)
         imageButton_ClawClose!!.setOnClickListener(this)
         imageButton_Up!!.setOnClickListener(this)
         imageButton_Down!!.setOnClickListener(this)
@@ -234,6 +244,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         })
         imageButton_Right!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
             dataSendOnTouch("H", motionEvent)
+            return@OnTouchListener false
+        })
+        imageButton_Stop!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+            dataSendOnTouch("I", motionEvent)
+            return@OnTouchListener false
+        })
+        imageButton_EmptyUp!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+            dataSendOnTouch("J", motionEvent)
+            return@OnTouchListener false
+        })
+        imageButton_EmptyDown!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+            dataSendOnTouch("K", motionEvent)
             return@OnTouchListener false
         })
     }

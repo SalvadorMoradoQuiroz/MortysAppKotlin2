@@ -27,5 +27,8 @@
     <string name="flash">Flash</string>
     <string name="bluetooth_desactivado">Bluetooth desactivado</string>
     <string name="dispositivo_seleccionado">Dispositivo seleccionado:</string>
+    <string name="btn_detener">btn detener</string>
+    <string name="btn_vaciar_up">btn vaciar up</string>
+    <string name="btn_vaciar_down">btn vaciar down</string>
 
 </resources>

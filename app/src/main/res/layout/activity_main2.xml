@@ -11,7 +11,7 @@
 
     <LinearLayout
         android:id="@+id/buttons_left"
-        android:layout_width="270dp"
+        android:layout_width="350dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:background="@color/white"
@@ -20,17 +20,19 @@
         <Button
             android:id="@+id/button_Video"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="60dp"
             android:layout_marginStart="5dp"
             android:layout_marginEnd="5dp"
+            android:layout_weight="1"
             android:text="@string/video_on"
-            android:textSize="12sp" />
+            android:textSize="10sp" />
 
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/switch_Flash"
             android:layout_width="match_parent"
-            android:layout_height="30dp"
+            android:layout_height="60dp"
             android:layout_marginStart="5dp"
+            android:layout_weight="1"
             android:minHeight="48dp"
             android:text="@string/flash"
             android:textSize="12sp"
@@ -39,7 +41,8 @@
         <ImageButton
             android:id="@+id/imageButton_ClawClose"
             android:layout_width="match_parent"
-            android:layout_height="70dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
             android:contentDescription="@string/btn_garra_cerrar"
             android:scaleType="fitCenter"
             app:srcCompat="@drawable/claw_close" />
@@ -49,6 +52,7 @@
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:layout_marginTop="0dp"
+            android:layout_weight="1"
             android:contentDescription="@string/btn_up"
             android:scaleType="fitCenter"
             app:srcCompat="@drawable/arrow_up" />
@@ -58,6 +62,7 @@
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:layout_marginTop="0dp"
+            android:layout_weight="1"
             android:contentDescription="@string/btn_down"
             android:scaleType="fitCenter"
             app:srcCompat="@drawable/arrow_down" />
@@ -65,11 +70,49 @@
         <ImageButton
             android:id="@+id/imageButton_ClawOpen"
             android:layout_width="match_parent"
-            android:layout_height="70dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
             android:contentDescription="@string/btn_garra_abrir"
             android:scaleType="fitCenter"
             app:srcCompat="@drawable/claw_open" />
 
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/buttons_left2"
+        android:layout_width="340dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="@color/white"
+        android:orientation="vertical">
+
+        <ImageButton
+            android:id="@+id/imageButton_Stop"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:contentDescription="@string/btn_detener"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/stop"
+            tools:ignore="ImageContrastCheck" />
+
+        <ImageButton
+            android:id="@+id/imageButton_EmptyUp"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:contentDescription="@string/btn_vaciar_up"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/sin_vaciar" />
+
+        <ImageButton
+            android:id="@+id/imageButton_EmptyDown"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:contentDescription="@string/btn_vaciar_down"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/vaciar" />
     </LinearLayout>
 
     <FrameLayout
@@ -97,7 +140,7 @@
 
     <LinearLayout
         android:id="@+id/buttons_right"
-        android:layout_width="270dp"
+        android:layout_width="350dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:background="@color/white"
@@ -106,8 +149,9 @@
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/switch_ObjDetect"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="60dp"
             android:layout_marginStart="5dp"
+            android:layout_weight="1"
             android:minHeight="32dp"
             android:text="@string/obj_detect"
             android:textAlignment="center"
@@ -116,7 +160,8 @@
         <ImageButton
             android:id="@+id/imageButton_ZipperUp"
             android:layout_width="match_parent"
-            android:layout_height="70dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
             android:contentDescription="@string/btn_cremallera_subir"
             android:scaleType="fitCenter"
             app:srcCompat="@drawable/zipper_up" />
@@ -126,6 +171,7 @@
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:layout_marginTop="0dp"
+            android:layout_weight="1"
             android:contentDescription="@string/btn_right"
             android:scaleType="fitCenter"
             app:srcCompat="@drawable/arrow_right" />
@@ -135,6 +181,7 @@
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:layout_marginTop="0dp"
+            android:layout_weight="1"
             android:contentDescription="@string/btn_letf"
             android:scaleType="fitCenter"
             app:srcCompat="@drawable/arrow_left" />
@@ -142,7 +189,8 @@
         <ImageButton
             android:id="@+id/imageButton_ZipperDown"
             android:layout_width="match_parent"
-            android:layout_height="70dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
             android:contentDescription="@string/btn_cremallera_bajar"
             android:scaleType="fitCenter"
             app:srcCompat="@drawable/zipper_down" />
@@ -150,7 +198,8 @@
         <TextView
             android:id="@+id/textView_RSSI"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="60dp"
+            android:layout_weight="1"
             android:text="@string/rssi"
             android:textAlignment="center" />
     </LinearLayout>
