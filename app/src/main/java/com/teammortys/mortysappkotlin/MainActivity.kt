@@ -479,7 +479,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
     private fun videoStream() {
         //val url = "http://" + editTextIP!!.text.toString().trim { it <= ' ' } + ":81/cam-hi.jpg"
-        val url = "http://$ipEspCam32/cam-hi.jpg"
+        val url = "http://$ipEspCam32:81/cam-hi.jpg"
         while (flagVideo) {
             try {
                 val `is` = URL(url).content as InputStream
