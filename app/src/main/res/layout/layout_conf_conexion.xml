@@ -19,6 +19,7 @@
             android:layout_marginTop="30dp"
             android:layout_marginEnd="20dp"
             android:backgroundTint="@color/colorPrimaryDark"
+
             android:gravity="center_vertical"
             android:hint="@string/ip_de_esp32_cam"
             android:visibility="visible"
