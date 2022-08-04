@@ -18,5 +18,7 @@
     <color name="icFocused">#DDFFFFFF</color>
     <color name="icPressed">#AAFFFFFF</color>
 
+    <color name="colorPrimaryDark">#0047BA</color>
+
 
 </resources>

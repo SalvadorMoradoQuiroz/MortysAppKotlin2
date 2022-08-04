@@ -27,6 +27,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.ActivityCompat
 import com.google.android.material.switchmaterial.SwitchMaterial
+import com.google.android.material.textfield.TextInputLayout
 import com.harrysoft.androidbluetoothserial.BluetoothManager
 import com.harrysoft.androidbluetoothserial.SimpleBluetoothDeviceInterface
 import com.teammortys.mortysappkotlin.ObjectDetectorHelper.DetectorListener
@@ -122,7 +123,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private var imageButton_MeterBase: ImageButton? = null
 
     private var flagBluetoothWifi: Boolean = false
-    private var itemSwitchBlueWifi: MenuItem? = null
+    private var ipEspCam32 : String = "192.168.43.160"
 
     override fun onDestroy() {
         super.onDestroy()
@@ -224,8 +225,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         // Handle action bar item clicks here.
         when (item.getItemId()) {
             R.id.conf_bt -> showDialogConfBt()
-            R.id.conf_conexion -> {}
-            else -> {}
+            R.id.conf_conexion -> {showDialogConfConexion()}
         }
         return super.onOptionsItemSelected(item)
     }
@@ -367,7 +367,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                         this@MainActivity.sendData()
                     }
                 }
-                //
                 else -> {}
             }
         }
@@ -385,10 +384,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private fun setFlash() {
         val flash_url: String
         if (flash_on_off) {
-            flash_url = "http://192.168.43.160/onFlash"
+            flash_url = "http://$ipEspCam32/onFlash"
             //buttonFlash!!.text = "FLASH OFF"
         } else {
-            flash_url = "http://192.168.43.160/offFlash"
+            flash_url = "http://$ipEspCam32/offFlash"
             //buttonFlash!!.text = "FLASH ON"
         }
         try {
@@ -411,7 +410,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     }
 
     private fun sendLetterESP32() {
-        val flash_url: String = "http://192.168.43.160/receiveLetter?letter={$letter}"
+        val flash_url: String = "http://$ipEspCam32/receiveLetter?letter={$letter}"
         try {
             while (sendData) {
                 val url = URL(flash_url)
@@ -441,7 +440,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private fun getRSSI() {
         rssi_handler!!.sendEmptyMessageDelayed(ID_RSSI, 500)
         //val rssi_url = "http://" + editTextIP!!.text.toString().trim { it <= ' ' } + "/RSSI"
-        val rssi_url = "http://192.168.43.160/RSSI"
+        val rssi_url = "http://$ipEspCam32/RSSI"
         try {
             val url = URL(rssi_url)
             try {
@@ -480,7 +479,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
     private fun videoStream() {
         //val url = "http://" + editTextIP!!.text.toString().trim { it <= ' ' } + ":81/cam-hi.jpg"
-        val url = "http://192.168.43.160:81/cam-hi.jpg"
+        val url = "http://$ipEspCam32/cam-hi.jpg"
         while (flagVideo) {
             try {
                 val `is` = URL(url).content as InputStream
@@ -604,6 +603,28 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
         button_CloseConfigBt.setOnClickListener { dialogConfBt.dismiss() }
 
+    }
+
+    fun showDialogConfConexion() {
+        val builder = AlertDialog.Builder(this)
+        val view = layoutInflater.inflate(R.layout.layout_conf_conexion, null)
+        builder.setView(view)
+        val dialogConfCon: AlertDialog = builder.create()
+        dialogConfCon.setCancelable(false)
+        dialogConfCon.show()
+
+        var editTextView_IPEsp32Cam = dialogConfCon.findViewById(R.id.editTextView_IPEsp32Cam) as TextInputLayout
+        var button_ChangeIP = dialogConfCon.findViewById(R.id.button_ChangeIP) as Button
+        var button_CloseConfConexion = dialogConfCon.findViewById(R.id.button_CloseConfConexion) as Button
+
+        editTextView_IPEsp32Cam.editText!!.setText("$ipEspCam32")
+        button_ChangeIP.setOnClickListener({
+            ipEspCam32 = editTextView_IPEsp32Cam.editText!!.text.toString()
+            Toast.makeText(applicationContext, "Se cambio la dirección IP del EspCam32.", Toast.LENGTH_SHORT).show()
+        })
+        button_CloseConfConexion.setOnClickListener({
+            dialogConfCon.dismiss()
+        })
     }
 
     private fun connectToDeviceBT() {

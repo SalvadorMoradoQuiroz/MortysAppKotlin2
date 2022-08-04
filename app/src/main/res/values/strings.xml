@@ -34,5 +34,7 @@
     <string name="btn_meter_base">btn meter base</string>
     <string name="bluetooth_on">Bluetooth ON</string>
     <string name="bluetooth">Bluetooth</string>
+    <string name="ip_de_esp32_cam">IP de ESP32 Cam</string>
+    <string name="cambiar_ip">Cambiar IP</string>
 
 </resources>
