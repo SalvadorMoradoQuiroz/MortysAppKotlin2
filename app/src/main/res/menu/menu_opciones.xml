@@ -6,10 +6,9 @@
     <!-- Settings, should always be in the overflow -->
     <item
         android:id="@+id/sw_bluewifi"
-        android:title="Bluetooth"
+        android:title="@string/bluetooth"
         app:actionLayout="@layout/switch_item"
-        app:showAsAction="always" />
-
+        app:showAsAction="ifRoom" />
 
     <item android:id="@+id/conf_conexion"
         android:title="@string/confi_string"

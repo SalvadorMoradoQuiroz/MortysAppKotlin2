@@ -30,5 +30,9 @@
     <string name="btn_detener">btn detener</string>
     <string name="btn_vaciar_up">btn vaciar up</string>
     <string name="btn_vaciar_down">btn vaciar down</string>
+    <string name="btn_sacar_base">btn sacar base</string>
+    <string name="btn_meter_base">btn meter base</string>
+    <string name="bluetooth_on">Bluetooth ON</string>
+    <string name="bluetooth">Bluetooth</string>
 
 </resources>

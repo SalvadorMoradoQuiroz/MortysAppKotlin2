@@ -11,16 +11,18 @@
 
     <LinearLayout
         android:id="@+id/buttons_left"
-        android:layout_width="350dp"
+        android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:background="@color/white"
         android:orientation="vertical">
 
-        5<Button
+        5
+
+        <Button
             android:id="@+id/button_Video"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="0dp"
             android:layout_marginStart="5dp"
             android:layout_marginEnd="5dp"
             android:layout_weight="1"
@@ -30,7 +32,7 @@
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/switch_Flash"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="0dp"
             android:layout_marginStart="5dp"
             android:layout_weight="1"
             android:minHeight="48dp"
@@ -41,7 +43,7 @@
         <ImageButton
             android:id="@+id/imageButton_ClawClose"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:contentDescription="@string/btn_garra_cerrar"
             android:scaleType="fitCenter"
@@ -50,7 +52,7 @@
         <ImageButton
             android:id="@+id/imageButton_Up"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="0dp"
             android:layout_marginTop="0dp"
             android:layout_weight="1"
             android:contentDescription="@string/btn_up"
@@ -60,7 +62,7 @@
         <ImageButton
             android:id="@+id/imageButton_Down"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="0dp"
             android:layout_marginTop="0dp"
             android:layout_weight="1"
             android:contentDescription="@string/btn_down"
@@ -70,7 +72,7 @@
         <ImageButton
             android:id="@+id/imageButton_ClawOpen"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:contentDescription="@string/btn_garra_abrir"
             android:scaleType="fitCenter"
@@ -80,7 +82,7 @@
 
     <LinearLayout
         android:id="@+id/buttons_left2"
-        android:layout_width="340dp"
+        android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:background="@color/white"
@@ -89,7 +91,7 @@
         <ImageButton
             android:id="@+id/imageButton_Stop"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:contentDescription="@string/btn_detener"
             android:scaleType="fitCenter"
@@ -99,7 +101,7 @@
         <ImageButton
             android:id="@+id/imageButton_EmptyUp"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:contentDescription="@string/btn_vaciar_up"
             android:scaleType="fitCenter"
@@ -108,7 +110,7 @@
         <ImageButton
             android:id="@+id/imageButton_EmptyDown"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:contentDescription="@string/btn_vaciar_down"
             android:scaleType="fitCenter"
@@ -117,27 +119,27 @@
         <ImageButton
             android:id="@+id/imageButton_SacarBase"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="0dp"
             android:layout_weight="1"
-            android:contentDescription="btn sacar base"
+            android:contentDescription="@string/btn_sacar_base"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/sacar_base"/>
+            app:srcCompat="@drawable/sacar_base" />
 
         <ImageButton
             android:id="@+id/imageButton_MeterBase"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="0dp"
             android:layout_weight="1"
-            android:contentDescription="btn meter base"
+            android:contentDescription="@string/btn_meter_base"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/meter_base"/>
+            app:srcCompat="@drawable/meter_base" />
     </LinearLayout>
 
     <FrameLayout
         android:id="@+id/frameLayout"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="1">
+        android:layout_weight="5">
 
         <ImageView
             android:id="@+id/imageMonitor"
@@ -158,7 +160,7 @@
 
     <LinearLayout
         android:id="@+id/buttons_right"
-        android:layout_width="350dp"
+        android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:background="@color/white"
@@ -167,7 +169,7 @@
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/switch_ObjDetect"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="0dp"
             android:layout_marginStart="5dp"
             android:layout_weight="1"
             android:minHeight="32dp"
@@ -178,7 +180,7 @@
         <ImageButton
             android:id="@+id/imageButton_ZipperUp"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:contentDescription="@string/btn_cremallera_subir"
             android:scaleType="fitCenter"
@@ -187,7 +189,7 @@
         <ImageButton
             android:id="@+id/imageButton_Right"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="0dp"
             android:layout_marginTop="0dp"
             android:layout_weight="1"
             android:contentDescription="@string/btn_right"
@@ -197,7 +199,7 @@
         <ImageButton
             android:id="@+id/imageButton_Left"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="0dp"
             android:layout_marginTop="0dp"
             android:layout_weight="1"
             android:contentDescription="@string/btn_letf"
@@ -207,7 +209,7 @@
         <ImageButton
             android:id="@+id/imageButton_ZipperDown"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:contentDescription="@string/btn_cremallera_bajar"
             android:scaleType="fitCenter"
@@ -216,7 +218,7 @@
         <TextView
             android:id="@+id/textView_RSSI"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:text="@string/rssi"
             android:textAlignment="center" />

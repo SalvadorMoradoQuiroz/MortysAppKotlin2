@@ -24,6 +24,7 @@ import androidx.annotation.NonNull
 import androidx.annotation.Nullable
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.ActivityCompat
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.harrysoft.androidbluetoothserial.BluetoothManager
@@ -63,15 +64,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     //BT libBluetooth
     var deviceMAC: String? = null
     var deviceName: String? = null
+
     // A CompositeDisposable that keeps track of all of our asynchronous tasks
     private val compositeDisposable = CompositeDisposable()
+
     // Our BluetoothManager!
     private var bluetoothManager: BluetoothManager? = null
+
     // Our Bluetooth Device! When disconnected it is null, so make sure we know that we need to deal with it potentially being null
     @Nullable
     private var deviceInterface: SimpleBluetoothDeviceInterface? = null
-    private var flagBluetooth:Boolean = false
-    private var switch_BtActivate:SwitchMaterial? =null
+    private var flagBluetooth: Boolean = false
+    private var switch_BtActivate: SwitchMaterial? = null
 
     private var stream_thread: HandlerThread? = null
     private var flash_thread: HandlerThread? = null
@@ -108,14 +112,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private var imageButton_Right: ImageButton? = null
     private var imageButton_Left: ImageButton? = null
     private var imageButton_ZipperDown: ImageButton? = null
-    private var textView_DeviceSelected:TextView? = null
-    private var letter:String = ""
-    private var imageButton_Stop:ImageButton? = null
-    private var imageButton_EmptyUp:ImageButton? = null
-    private var imageButton_EmptyDown:ImageButton? = null
+    private var textView_DeviceSelected: TextView? = null
+    private var letter: String = ""
+    private var imageButton_Stop: ImageButton? = null
+    private var imageButton_EmptyUp: ImageButton? = null
+    private var imageButton_EmptyDown: ImageButton? = null
 
-    private var imageButton_SacarBase:ImageButton? = null
-    private var imageButton_MeterBase:ImageButton? = null
+    private var imageButton_SacarBase: ImageButton? = null
+    private var imageButton_MeterBase: ImageButton? = null
+
+    private var flagBluetoothWifi: Boolean = false
+    private var itemSwitchBlueWifi: MenuItem? = null
 
     override fun onDestroy() {
         super.onDestroy()
@@ -149,7 +156,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         imageButton_SacarBase = findViewById(R.id.imageButton_SacarBase)
         imageButton_MeterBase = findViewById(R.id.imageButton_MeterBase)
 
-
         imageButton_MeterBase!!.setOnClickListener(this)
         imageButton_SacarBase!!.setOnClickListener(this)
         imageButton_Stop!!.setOnClickListener(this)
@@ -166,7 +172,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         button_Video!!.setOnClickListener(this)
         switch_Flash!!.setOnClickListener(this)
         switch_ObjDetect!!.setOnClickListener(this)
-
 
         stream_thread = HandlerThread("http")
         stream_thread!!.start()
@@ -198,22 +203,28 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         checkBTPermissions()*/
     }
 
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_opciones, menu)
+        val sw_bluewifi = menu.findItem(R.id.sw_bluewifi)
+        val actionView = sw_bluewifi.actionView.findViewById(R.id.switchBluetoothWifi) as SwitchCompat
+        actionView.setOnCheckedChangeListener { buttonView, isChecked ->
+            if(isChecked){
+                actionView.setText("Wifi ON")
+                flagBluetoothWifi = true
+            }else{
+                actionView.setText("Bluetooth ON")
+                flagBluetoothWifi = false
+            }
+        }
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         // Handle action bar item clicks here.
         when (item.getItemId()) {
-            R.id.sw_bluewifi -> {}
-
             R.id.conf_bt -> showDialogConfBt()
-
             R.id.conf_conexion -> {}
-
             else -> {}
         }
         return super.onOptionsItemSelected(item)
@@ -221,75 +232,92 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
     //Acciones de los botones
     @SuppressLint("ClickableViewAccessibility")
-    private fun onTouchButtons(){
-        imageButton_Up!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+    private fun onTouchButtons() {
+        imageButton_Up!!.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
             dataSendOnTouch("A", motionEvent)
             return@OnTouchListener false
         })
-        imageButton_Down!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+        imageButton_Down!!.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
             dataSendOnTouch("B", motionEvent)
             return@OnTouchListener false
         })
-        imageButton_ClawOpen!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+        imageButton_ClawOpen!!.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
             dataSendOnTouch("C", motionEvent)
             return@OnTouchListener false
         })
-        imageButton_ClawClose!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+        imageButton_ClawClose!!.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
             dataSendOnTouch("D", motionEvent)
             return@OnTouchListener false
         })
-        imageButton_ZipperUp!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+        imageButton_ZipperUp!!.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
             dataSendOnTouch("E", motionEvent)
             return@OnTouchListener false
         })
-        imageButton_ZipperDown!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+        imageButton_ZipperDown!!.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
             dataSendOnTouch("F", motionEvent)
             return@OnTouchListener false
         })
-        imageButton_Left!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+        imageButton_Left!!.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
             dataSendOnTouch("G", motionEvent)
             return@OnTouchListener false
         })
-        imageButton_Right!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+        imageButton_Right!!.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
             dataSendOnTouch("H", motionEvent)
             return@OnTouchListener false
         })
-        imageButton_Stop!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+        imageButton_Stop!!.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
             dataSendOnTouch("I", motionEvent)
             return@OnTouchListener false
         })
-        imageButton_EmptyUp!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+        imageButton_EmptyUp!!.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
             dataSendOnTouch("J", motionEvent)
             return@OnTouchListener false
         })
-        imageButton_EmptyDown!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+        imageButton_EmptyDown!!.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
             dataSendOnTouch("K", motionEvent)
             return@OnTouchListener false
         })
-        imageButton_SacarBase!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+        imageButton_SacarBase!!.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
             dataSendOnTouch("L", motionEvent)
             return@OnTouchListener false
         })
-        imageButton_MeterBase!!.setOnTouchListener(View.OnTouchListener{view, motionEvent ->
+        imageButton_MeterBase!!.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
             dataSendOnTouch("M", motionEvent)
             return@OnTouchListener false
         })
     }
 
-    private fun dataSendOnTouch(letter:String, motionEvent:MotionEvent){
-        if(this.deviceInterface!=null){
-            when(motionEvent.action){
-                MotionEvent.ACTION_DOWN->{
-                    this.letter=letter
+    private fun dataSendOnTouch(letter: String, motionEvent: MotionEvent) {
+        if (flagBluetoothWifi) {//Envío de datos vía WIFI
+            when (motionEvent.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    this.letter = letter
                     sendData = true
                     sendDataHandler!!.sendEmptyMessage(ID_SEND_DATA)
                 }
-                MotionEvent.ACTION_UP->{
+                MotionEvent.ACTION_UP -> {
                     sendData = false
                 }
             }
-       }else{
-            Toast.makeText(applicationContext, "Debes conectarte al dispositibo bluetooth.", Toast.LENGTH_SHORT).show()
+        } else {//Envío de datos vía bluetooth
+            if (this.deviceInterface != null) {
+                when (motionEvent.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        this.letter = letter
+                        sendData = true
+                        sendDataHandler!!.sendEmptyMessage(ID_SEND_DATA)
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        sendData = false
+                    }
+                }
+            } else {
+                Toast.makeText(
+                    applicationContext,
+                    "Debes conectarte al dispositibo bluetooth.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
@@ -332,19 +360,25 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                 this@MainActivity.ID_CONNECT -> this@MainActivity.videoStream()
                 this@MainActivity.ID_FLASH -> this@MainActivity.setFlash()
                 this@MainActivity.ID_RSSI -> this@MainActivity.getRSSI()
-                this@MainActivity.ID_SEND_DATA -> this@MainActivity.sendData()
-                //this@MainActivity.ID_SEND_DATA -> this@MainActivity.sendLetterESP32()
+                this@MainActivity.ID_SEND_DATA -> {
+                    if (flagBluetoothWifi) {
+                        this@MainActivity.sendLetterESP32()
+                    } else {
+                        this@MainActivity.sendData()
+                    }
+                }
+                //
                 else -> {}
             }
         }
     }
 
-    private fun sendData(){
-        while (sendData){
+    private fun sendData() {
+        while (sendData) {
             deviceInterface!!.sendMessage(letter)
             Thread.sleep(1000)
         }
-        runOnUiThread({deviceInterface!!.sendMessage("P")})
+        runOnUiThread({ deviceInterface!!.sendMessage("P") })
     }
 
     //Métodos para solicitar peticiones a ESP 32 CAM -----------------------------------------------
@@ -379,7 +413,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private fun sendLetterESP32() {
         val flash_url: String = "http://192.168.43.160/receiveLetter?letter={$letter}"
         try {
-            while(sendData){
+            while (sendData) {
                 val url = URL(flash_url)
                 val huc = url.openConnection() as HttpURLConnection
                 huc.requestMethod = "GET"
@@ -396,6 +430,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            Toast.makeText(
+                applicationContext,
+                "Asegurate de tener en la misma red al ESP32 Cam y tú dispositivo móvil.",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -423,9 +462,19 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                 }
             } catch (e: java.lang.Exception) {
                 e.printStackTrace()
+                Toast.makeText(
+                    applicationContext,
+                    "Asegurate de tener en la misma red al ESP32 Cam y tú dispositivo móvil.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         } catch (e: MalformedURLException) {
             e.printStackTrace()
+            Toast.makeText(
+                applicationContext,
+                "Asegurate de tener en la misma red al ESP32 Cam y tú dispositivo móvil.",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -458,6 +507,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
             } catch (e: java.lang.Exception) {
                 e.printStackTrace()
+                Toast.makeText(
+                    applicationContext,
+                    "Asegurate de tener en la misma red al ESP32 Cam y tú dispositivo móvil.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
         runOnUiThread { imageMonitor!!.setImageResource(R.drawable.play_video) }
@@ -498,7 +552,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         dialogConfBt.setCancelable(false)
         dialogConfBt.show()
 
-        this.switch_BtActivate = dialogConfBt.findViewById(R.id.switch_BtActivated) as SwitchMaterial
+        this.switch_BtActivate =
+            dialogConfBt.findViewById(R.id.switch_BtActivated) as SwitchMaterial
         var button_VisibleBt = dialogConfBt.findViewById(R.id.button_VisibleBt) as Button
         var button_SearchDevicesBt =
             dialogConfBt.findViewById(R.id.button_SearchDevicesBt) as Button
@@ -509,7 +564,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         var button_CloseConfigBt = dialogConfBt.findViewById(R.id.button_CloseConfigBt) as Button
 
         mBTDevices = ArrayList<BluetoothDevice>()
-        mDeviceListAdapter = DeviceListAdapter(applicationContext, R.layout.device_adapter_view, mBTDevices!!)
+        mDeviceListAdapter =
+            DeviceListAdapter(applicationContext, R.layout.device_adapter_view, mBTDevices!!)
         lvNewDevices?.adapter = mDeviceListAdapter
 
         if (mBluetoothAdapter!!.isEnabled) {
@@ -518,16 +574,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
             this.switch_BtActivate!!.isChecked = true
         }
 
-        if(this.deviceInterface!=null){
-            deviceMAC=this.deviceInterface!!.device.mac
-            textView_DeviceSelected!!.setText("Dispositivo seleccionado: " + deviceMAC )
+        if (this.deviceInterface != null) {
+            deviceMAC = this.deviceInterface!!.device.mac
+            textView_DeviceSelected!!.setText("Dispositivo seleccionado: " + deviceMAC)
         }
 
         this.switch_BtActivate!!.setOnClickListener {
             enableDisableBT()
         }
 
-        button_VisibleBt.setOnClickListener{doVisibleBT()}
+        button_VisibleBt.setOnClickListener { doVisibleBT() }
 
         button_SearchDevicesBt.setOnClickListener { searchBT() }
 
@@ -536,25 +592,37 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                 mBluetoothAdapter?.cancelDiscovery()
                 this.deviceMAC = mBTDevices!!.get(position).getAddress()
                 this.deviceName = mBTDevices!!.get(position).getName()
-                textView_DeviceSelected!!.setText("Dispositivo seleccionado: "+mBTDevices!!.get(position).toString())
+                textView_DeviceSelected!!.setText(
+                    "Dispositivo seleccionado: " + mBTDevices!!.get(
+                        position
+                    ).toString()
+                )
             }
         )
 
-        button_ConnectBt.setOnClickListener{connectToDeviceBT()}
+        button_ConnectBt.setOnClickListener { connectToDeviceBT() }
 
-        button_CloseConfigBt.setOnClickListener{ dialogConfBt.dismiss()}
+        button_CloseConfigBt.setOnClickListener { dialogConfBt.dismiss() }
 
     }
 
-    private fun connectToDeviceBT(){
-        if(deviceMAC != null){
-            compositeDisposable.add(bluetoothManager!!.openSerialDevice(deviceMAC!!)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ device -> onConnected(device.toSimpleDeviceInterface()) }, ({t->onErrorConnected(t)}))
+    private fun connectToDeviceBT() {
+        if (deviceMAC != null) {
+            compositeDisposable.add(
+                bluetoothManager!!.openSerialDevice(deviceMAC!!)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                        { device -> onConnected(device.toSimpleDeviceInterface()) },
+                        ({ t -> onErrorConnected(t) })
+                    )
             )
-        }else{
-            Toast.makeText(applicationContext, "Debes buscar y seleccionar un dispositivo primero.", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(
+                applicationContext,
+                "Debes buscar y seleccionar un dispositivo primero.",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -563,20 +631,29 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         this.deviceInterface = deviceInterface
         if (this.deviceInterface != null) {
             this.deviceInterface!!.setListeners(this, this, this)
-            Toast.makeText(applicationContext, "Se conectó al dispositivo: "+this.deviceInterface!!.device.mac, Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                applicationContext,
+                "Se conectó al dispositivo: " + this.deviceInterface!!.device.mac,
+                Toast.LENGTH_SHORT
+            ).show()
         } else {
-            Toast.makeText(applicationContext, "Fallo al conectar, intente de nuevo.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                applicationContext,
+                "Fallo al conectar, intente de nuevo.",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
     //Error al conectar dispositivo
-    private fun onErrorConnected(error: Throwable){
-        Toast.makeText(applicationContext, "Error al conectar el dispositivo.", Toast.LENGTH_SHORT).show()
+    private fun onErrorConnected(error: Throwable) {
+        Toast.makeText(applicationContext, "Error al conectar el dispositivo.", Toast.LENGTH_SHORT)
+            .show()
         Log.e("Error onConnected", error.message.toString())
     }
 
     override fun onMessageSent(message: String) {
-        Toast.makeText(applicationContext, "Mensaje enviado: $message", Toast.LENGTH_SHORT) .show()
+        Toast.makeText(applicationContext, "Mensaje enviado: $message", Toast.LENGTH_SHORT).show()
     }
 
     override fun onMessageReceived(message: String) {
@@ -588,14 +665,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         Log.e("Error onError deviceInterface", error.message.toString())
         bluetoothManager!!.close()
         deviceMAC = null
-        Toast.makeText(applicationContext, "Se desconecto del dispositivo vinculado.", Toast.LENGTH_SHORT).show()
-        if(textView_DeviceSelected!=null){
+        Toast.makeText(
+            applicationContext,
+            "Se desconecto del dispositivo vinculado.",
+            Toast.LENGTH_SHORT
+        ).show()
+        if (textView_DeviceSelected != null) {
             textView_DeviceSelected!!.setText("Dispositivo seleccionado: ")
         }
     }
 
     @SuppressLint("MissingPermission")
-    private fun doVisibleBT(){
+    private fun doVisibleBT() {
         val discoverableIntent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
         discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
         startActivity(discoverableIntent)
@@ -607,14 +688,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         override fun onReceive(context: Context?, intent: Intent) {
             val action: String? = intent.getAction()
             if (action == BluetoothAdapter.ACTION_STATE_CHANGED) {
-                val state: Int = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
+                val state: Int =
+                    intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
                 when (state) {
                     BluetoothAdapter.STATE_OFF -> {
                         flagBluetooth = false
                         this@MainActivity.switch_BtActivate!!.setText("Bluetooth desactivado")
                         this@MainActivity.switch_BtActivate!!.isChecked = false
-                        Toast.makeText(applicationContext, "Bluetooth apagado", Toast.LENGTH_SHORT).show()
-                        if(mBTDevices!=null){
+                        Toast.makeText(applicationContext, "Bluetooth apagado", Toast.LENGTH_SHORT)
+                            .show()
+                        if (mBTDevices != null) {
                             mBTDevices!!.clear()
                             mDeviceListAdapter!!.notifyDataSetChanged()
                             textView_DeviceSelected!!.setText("Dispositivo seleccionado: ")
@@ -623,16 +706,25 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                         mBTDevices!!.clear();
                     }
                     BluetoothAdapter.STATE_TURNING_OFF -> {
-                        Toast.makeText(applicationContext, "Apagando bluetooth", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(applicationContext, "Apagando bluetooth", Toast.LENGTH_SHORT)
+                            .show()
                     }
                     BluetoothAdapter.STATE_ON -> {
                         this@MainActivity.switch_BtActivate!!.setText("Bluetooth activado")
                         this@MainActivity.switch_BtActivate!!.isChecked = true
                         flagBluetooth = true
-                        Toast.makeText(applicationContext, "Bluetooth encendido", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            applicationContext,
+                            "Bluetooth encendido",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                     BluetoothAdapter.STATE_TURNING_ON -> {
-                        Toast.makeText(applicationContext, "Encendiendo bluetooth", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            applicationContext,
+                            "Encendiendo bluetooth",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
@@ -641,14 +733,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if(requestCode==500){//Intent para encender bluetooth o no
-            if(resultCode==0){//Se rechazo
+        if (requestCode == 500) {//Intent para encender bluetooth o no
+            if (resultCode == 0) {//Se rechazo
                 this@MainActivity.switch_BtActivate!!.setText("Bluetooth desactivado")
                 this@MainActivity.switch_BtActivate!!.isChecked = false
             }
         }
-        Log.e("requestCode", requestCode.toString() )
-        Log.e("resultCode", resultCode.toString() )
+        Log.e("requestCode", requestCode.toString())
+        Log.e("resultCode", resultCode.toString())
     }
 
     //Para ver los cambios de estado del bluetooth, si se enciende o expira discovery
@@ -656,21 +748,35 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         override fun onReceive(context: Context?, intent: Intent) {
             val action: String? = intent.getAction()
             if (action == BluetoothAdapter.ACTION_SCAN_MODE_CHANGED) {
-                val mode: Int = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.ERROR)
+                val mode: Int =
+                    intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.ERROR)
                 when (mode) {
                     BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE -> {
-                        Toast.makeText(applicationContext, "Visibilidad habilitada.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            applicationContext,
+                            "Visibilidad habilitada.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
-                    BluetoothAdapter.SCAN_MODE_CONNECTABLE ->{
-                        Toast.makeText(applicationContext, "Visibilidad deshabilitada. Capaz de recibir conexiones.", Toast.LENGTH_SHORT).show()
+                    BluetoothAdapter.SCAN_MODE_CONNECTABLE -> {
+                        Toast.makeText(
+                            applicationContext,
+                            "Visibilidad deshabilitada. Capaz de recibir conexiones.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
-                    BluetoothAdapter.SCAN_MODE_NONE ->{
-                        Toast.makeText(applicationContext, "Visibilidad deshabilitada. No capaz de recibir conexiones.", Toast.LENGTH_SHORT).show()
+                    BluetoothAdapter.SCAN_MODE_NONE -> {
+                        Toast.makeText(
+                            applicationContext,
+                            "Visibilidad deshabilitada. No capaz de recibir conexiones.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                     BluetoothAdapter.STATE_CONNECTING -> {
-                        Toast.makeText(applicationContext, "Conectando...", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(applicationContext, "Conectando...", Toast.LENGTH_SHORT)
+                            .show()
                     }
-                    BluetoothAdapter.STATE_CONNECTED ->{
+                    BluetoothAdapter.STATE_CONNECTED -> {
                         Toast.makeText(applicationContext, "Conectado.", Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -688,7 +794,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
             if (action == BluetoothDevice.ACTION_FOUND) {
                 val device: BluetoothDevice? =
                     intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-                if(!mBTDevices!!.contains(device!!)) {
+                if (!mBTDevices!!.contains(device!!)) {
                     Log.d(TAG, "onReceive: " + device?.getName().toString() + ": " + device.address)
                     mBTDevices!!.add(device!!)
                     mDeviceListAdapter!!.notifyDataSetChanged()
@@ -701,11 +807,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     fun searchBT() {
         checkBTPermissions()
 
-        var location:LocationManager = applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        var flagBT:Boolean = mBluetoothAdapter!!.isEnabled
-        var flagGPS:Boolean = location.isLocationEnabled
+        var location: LocationManager =
+            applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        var flagBT: Boolean = mBluetoothAdapter!!.isEnabled
+        var flagGPS: Boolean = location.isLocationEnabled
 
-        if(flagBT && flagGPS){
+        if (flagBT && flagGPS) {
 
             mBTDevices!!.clear()
             mDeviceListAdapter!!.notifyDataSetChanged()
@@ -716,26 +823,30 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                 mBluetoothAdapter?.startDiscovery()
                 val discoverDevicesIntent = IntentFilter(BluetoothDevice.ACTION_FOUND)
                 registerReceiver(mBroadcastReceiver3, discoverDevicesIntent)
-            }
-            else if (!mBluetoothAdapter?.isDiscovering()!!) {
+            } else if (!mBluetoothAdapter?.isDiscovering()!!) {
                 checkBTPermissions()
                 mBluetoothAdapter?.startDiscovery()
                 val discoverDevicesIntent = IntentFilter(BluetoothDevice.ACTION_FOUND)
                 registerReceiver(mBroadcastReceiver3, discoverDevicesIntent)
             }
-        }else{
-            if(!flagGPS){
-                Toast.makeText(applicationContext, "Debes encender la ubicación", Toast.LENGTH_LONG).show()
+        } else {
+            if (!flagGPS) {
+                Toast.makeText(applicationContext, "Debes encender la ubicación", Toast.LENGTH_LONG)
+                    .show()
                 locationOn(location)
             }
-            if(flagGPS && (!flagBT)){
-                Toast.makeText(applicationContext, "Debes encender el bluetooth", Toast.LENGTH_SHORT).show()
+            if (flagGPS && (!flagBT)) {
+                Toast.makeText(
+                    applicationContext,
+                    "Debes encender el bluetooth",
+                    Toast.LENGTH_SHORT
+                ).show()
                 enableDisableBT()
             }
         }
     }
 
-    private fun locationOn(location:LocationManager){
+    private fun locationOn(location: LocationManager) {
         var intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
         startActivityForResult(intent, 501)
     }
@@ -743,10 +854,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
     @RequiresApi(Build.VERSION_CODES.M)
     private fun checkBTPermissions() {
-        var permissionCheck: Int = this.checkSelfPermission("Manifest.permission.ACCESS_FINE_LOCATION")
+        var permissionCheck: Int =
+            this.checkSelfPermission("Manifest.permission.ACCESS_FINE_LOCATION")
         permissionCheck += this.checkSelfPermission("Manifest.permission.ACCESS_COARSE_LOCATION")
 
-        var permiso2: Int = ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN)
+        var permiso2: Int =
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN)
 
         if (permissionCheck != 0 && permiso2 != 0) {
             this.requestPermissions(
@@ -765,7 +878,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     @SuppressLint("MissingPermission")
     fun enableDisableBT() {
         if (mBluetoothAdapter == null) {
-            Toast.makeText(applicationContext, "El dispositivo no tiene bluetooth", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                applicationContext,
+                "El dispositivo no tiene bluetooth",
+                Toast.LENGTH_SHORT
+            ).show()
             Log.e("ERROR:", "El dispositivo no tiene bluetooth")
         }
         if (!mBluetoothAdapter!!.isEnabled) {
