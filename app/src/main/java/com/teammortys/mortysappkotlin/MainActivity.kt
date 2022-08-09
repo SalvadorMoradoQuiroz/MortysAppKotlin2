@@ -123,7 +123,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private var imageButton_MeterBase: ImageButton? = null
 
     private var flagBluetoothWifi: Boolean = false
-    private var ipEspCam32 : String = "192.168.43.160"
+    private var ipEspCam32: String = "192.168.43.160"
 
     override fun onDestroy() {
         super.onDestroy()
@@ -132,6 +132,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         unregisterReceiver(mBroadcastReceiver3)
     }
 
+    @RequiresApi(Build.VERSION_CODES.ECLAIR)
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -208,12 +209,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_opciones, menu)
         val sw_bluewifi = menu.findItem(R.id.sw_bluewifi)
-        val actionView = sw_bluewifi.actionView.findViewById(R.id.switchBluetoothWifi) as SwitchCompat
+        val actionView =
+            sw_bluewifi.actionView.findViewById(R.id.switchBluetoothWifi) as SwitchCompat
         actionView.setOnCheckedChangeListener { buttonView, isChecked ->
-            if(isChecked){
+            if (isChecked) {
                 actionView.setText("Wifi ON")
                 flagBluetoothWifi = true
-            }else{
+            } else {
                 actionView.setText("Bluetooth ON")
                 flagBluetoothWifi = false
             }
@@ -225,7 +227,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         // Handle action bar item clicks here.
         when (item.getItemId()) {
             R.id.conf_bt -> showDialogConfBt()
-            R.id.conf_conexion -> {showDialogConfConexion()}
+            R.id.conf_conexion -> {
+                showDialogConfConexion()
+            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -373,11 +377,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     }
 
     private fun sendData() {
-        while (sendData) {
-            deviceInterface!!.sendMessage(letter)
-            Thread.sleep(1000)
+        try {
+            while (sendData) {
+                deviceInterface!!.sendMessage(letter)
+                Thread.sleep(250)
+            }
+            runOnUiThread({ deviceInterface!!.sendMessage("P") })
+        } catch (e: Exception) {
+            Toast.makeText(applicationContext,"Posiblemente se desconectó el dispositivo.", Toast.LENGTH_SHORT).show()
         }
-        runOnUiThread({ deviceInterface!!.sendMessage("P") })
     }
 
     //Métodos para solicitar peticiones a ESP 32 CAM -----------------------------------------------
@@ -575,7 +583,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
         if (this.deviceInterface != null) {
             deviceMAC = this.deviceInterface!!.device.mac
-            textView_DeviceSelected!!.setText("Dispositivo seleccionado: " + deviceMAC)
+            textView_DeviceSelected!!.setText("Dispositivo seleccionado: " + deviceMAC + " esta conectado.")
         }
 
         this.switch_BtActivate!!.setOnClickListener {
@@ -613,14 +621,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         dialogConfCon.setCancelable(false)
         dialogConfCon.show()
 
-        var editTextView_IPEsp32Cam = dialogConfCon.findViewById(R.id.editTextView_IPEsp32Cam) as TextInputLayout
+        var editTextView_IPEsp32Cam =
+            dialogConfCon.findViewById(R.id.editTextView_IPEsp32Cam) as TextInputLayout
         var button_ChangeIP = dialogConfCon.findViewById(R.id.button_ChangeIP) as Button
-        var button_CloseConfConexion = dialogConfCon.findViewById(R.id.button_CloseConfConexion) as Button
+        var button_CloseConfConexion =
+            dialogConfCon.findViewById(R.id.button_CloseConfConexion) as Button
 
         editTextView_IPEsp32Cam.editText!!.setText("$ipEspCam32")
         button_ChangeIP.setOnClickListener({
             ipEspCam32 = editTextView_IPEsp32Cam.editText!!.text.toString()
-            Toast.makeText(applicationContext, "Se cambio la dirección IP del EspCam32.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                applicationContext,
+                "Se cambio la dirección IP del EspCam32.",
+                Toast.LENGTH_SHORT
+            ).show()
         })
         button_CloseConfConexion.setOnClickListener({
             dialogConfCon.dismiss()
