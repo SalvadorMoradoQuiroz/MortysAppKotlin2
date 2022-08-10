@@ -124,6 +124,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
 
     private var flagBluetoothWifi: Boolean = false
     private var ipEspCam32: String = "192.168.43.160"
+    private var objDetected: Boolean = false;
 
     override fun onDestroy() {
         super.onDestroy()
@@ -350,6 +351,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
             }
             R.id.switch_ObjDetect -> {
                 obj_detect = switch_ObjDetect!!.isChecked
+                if(objDetected){
+                    objDetected==false
+                }
             }
             else -> {}
         }
@@ -384,7 +388,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
             }
             runOnUiThread({ deviceInterface!!.sendMessage("P") })
         } catch (e: Exception) {
-            Toast.makeText(applicationContext,"Posiblemente se desconectó el dispositivo.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                applicationContext,
+                "Posiblemente se desconectó el dispositivo.",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -434,6 +442,32 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
                     val br = BufferedReader(isr)
                     Log.e("Res", br.readLine())
                 }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(
+                applicationContext,
+                "Asegurate de tener en la misma red al ESP32 Cam y tú dispositivo móvil.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    private fun sendLetterESP32Opc2() {
+        val flash_url: String = "http://$ipEspCam32/receiveLetter?letter={$letter}"
+        try {
+            val url = URL(flash_url)
+            val huc = url.openConnection() as HttpURLConnection
+            huc.requestMethod = "GET"
+            huc.connectTimeout = 2500
+            huc.readTimeout = 2500
+            huc.doInput = true
+            huc.connect()
+            if (huc.responseCode == 200) {
+                val `in` = huc.inputStream
+                val isr = InputStreamReader(`in`)
+                val br = BufferedReader(isr)
+                Log.e("Res", br.readLine())
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -538,18 +572,25 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
         if (results != null) {
             tracking_overlay.setResults(results, imageHeight, imageWidth)
             tracking_overlay.invalidate()
-            /*for (result in results) {
-                val textResult = result.categories[0].label + " " +
-                        String.format("%.2f", result.categories[0].score)
-                Log.e("Object detected:", textResult)
-                textViewObjectDetected!!.setText(textResult)
-            }*/
+
+            if (!objDetected) {
+                for (result in results) {
+                    Log.e("Objeto detectado:", result.categories[0].label )
+                    Log.e("Porcentaje:", result.categories[0].score.toString() )
+                    if (result.categories[0].label.equals("person") && result.categories[0].score >= 0.60
+                    ) {
+                        Log.e("Envio", "de objeto detectado" )
+                        letter="Z"
+                        sendLetterESP32Opc2();
+                        break
+                    }
+                }
+            }
         }
     }
 
-
     //BLUETOOTH-------------------------------------------------------------------------------------
-    //Método  para recibir de bt
+//Método  para recibir de bt
     @SuppressLint("MissingPermission")
     fun showDialogConfBt() {
         val builder = AlertDialog.Builder(this)
