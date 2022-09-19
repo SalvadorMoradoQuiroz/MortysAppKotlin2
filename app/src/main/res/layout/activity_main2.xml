@@ -17,8 +17,6 @@
         android:background="@color/white"
         android:orientation="vertical">
 
-        5
-
         <Button
             android:id="@+id/button_Video"
             android:layout_width="match_parent"
