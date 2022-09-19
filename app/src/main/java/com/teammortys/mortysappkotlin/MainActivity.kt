@@ -126,6 +126,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, DetectorListener
     private var ipEspCam32: String = "192.168.43.160"
     private var objDetected: Boolean = false;
 
+
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(mBroadcastReceiver1)
